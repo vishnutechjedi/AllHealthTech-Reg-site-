@@ -13,9 +13,11 @@
     "lint": "eslint . --ext .js --report-unused-disable-directives --max-warnings 0",
     "format": "prettier --write \"src/**/*.js\"",
     "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
     "db:generate": "prisma generate",
     "db:seed": "node prisma/seed.js",
     "db:studio": "prisma studio",
+    "registrations:recover": "node scripts/recover-paid-registration.js",
     "sheets:recover": "node scripts/recover-google-sheets-sync.js"
   },
   "dependencies": {

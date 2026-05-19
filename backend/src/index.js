@@ -17,6 +17,10 @@ import paymentsRouter from './routes/payments.js';
 const app = express();
 const PORT = process.env.PORT ?? 3000;
 
+// The production app sits behind one hosting/load-balancer proxy.
+// This lets express-rate-limit use X-Forwarded-For safely.
+app.set('trust proxy', 1);
+
 // Security middleware
 // Helmet adds various HTTP headers for security
 app.use(helmet({
