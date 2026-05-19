@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   mapRegistrationToSheetRow,
+  mapRegistrationToSheetValues,
   TransientSyncError,
   PermanentSyncError,
 } from './googleSheetsService.js';
@@ -17,8 +18,6 @@ describe('Google Sheets Service', () => {
         role: 'Manager',
         dietaryRestrictions: 'Vegetarian',
         accessibilityNeeds: 'Wheelchair access',
-        ticketType: { name: 'General Admission' },
-        event: { name: 'AllHealthTech 2025' },
         createdAt: new Date('2025-10-01T14:30:00Z'),
       };
 
@@ -32,8 +31,6 @@ describe('Google Sheets Service', () => {
       expect(row.role).toBe('Manager');
       expect(row.dietaryRestrictions).toBe('Vegetarian');
       expect(row.accessibilityNeeds).toBe('Wheelchair access');
-      expect(row.ticketType).toBe('General Admission');
-      expect(row.eventName).toBe('AllHealthTech 2025');
       expect(row.registrationTimestamp).toBe('2025-10-01T14:30:00.000Z');
     });
 
@@ -47,8 +44,6 @@ describe('Google Sheets Service', () => {
         role: undefined,
         dietaryRestrictions: undefined,
         accessibilityNeeds: undefined,
-        ticketType: { name: 'VIP' },
-        event: { name: 'AllHealthTech 2025' },
         createdAt: new Date('2025-10-01T15:00:00Z'),
       };
 
@@ -60,7 +55,7 @@ describe('Google Sheets Service', () => {
       expect(row.accessibilityNeeds).toBe('');
     });
 
-    it('should handle missing ticketType and event', () => {
+    it('should handle missing ticketType and event (no longer applicable)', () => {
       const registration = {
         ticketId: 'AHT-2025-00003',
         attendeeName: 'Bob Johnson',
@@ -70,15 +65,14 @@ describe('Google Sheets Service', () => {
         role: 'Developer',
         dietaryRestrictions: 'Vegan',
         accessibilityNeeds: undefined,
-        ticketType: undefined,
-        event: undefined,
         createdAt: new Date('2025-10-01T16:00:00Z'),
       };
 
       const row = mapRegistrationToSheetRow(registration);
 
-      expect(row.ticketType).toBe('');
-      expect(row.eventName).toBe('');
+      // ticketType and eventName fields no longer exist
+      expect(row.ticketType).toBeUndefined();
+      expect(row.eventName).toBeUndefined();
     });
 
     it('should format timestamp as ISO 8601', () => {
@@ -91,14 +85,26 @@ describe('Google Sheets Service', () => {
         role: undefined,
         dietaryRestrictions: undefined,
         accessibilityNeeds: undefined,
-        ticketType: { name: 'Standard' },
-        event: { name: 'AllHealthTech 2025' },
         createdAt: new Date('2025-10-15T10:30:45.123Z'),
       };
 
       const row = mapRegistrationToSheetRow(registration);
 
       expect(row.registrationTimestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+      expect(row.registrationTimestamp).toBe('2025-10-15T10:30:45.123Z');
+    });
+
+    it('should handle JSON-restored createdAt strings from retry payloads', () => {
+      const registration = {
+        ticketId: 'AHT-2025-00009',
+        attendeeName: 'Retry User',
+        attendeeEmail: 'retry@example.com',
+        attendeePhone: '+91 98765 43210',
+        createdAt: '2025-10-15T10:30:45.123Z',
+      };
+
+      const row = mapRegistrationToSheetRow(registration);
+
       expect(row.registrationTimestamp).toBe('2025-10-15T10:30:45.123Z');
     });
   });
@@ -134,8 +140,6 @@ describe('Google Sheets Service', () => {
         role: 'VP of R&D',
         dietaryRestrictions: 'Gluten-free, Nut-free',
         accessibilityNeeds: 'Sign language interpreter & accessible parking',
-        ticketType: { name: 'Premium VIP' },
-        event: { name: 'AllHealthTech 2025 - India' },
         createdAt: new Date('2025-10-01T14:30:00Z'),
       };
 
@@ -161,8 +165,6 @@ describe('Google Sheets Service', () => {
         role: longString,
         dietaryRestrictions: longString,
         accessibilityNeeds: longString,
-        ticketType: { name: 'Standard' },
-        event: { name: 'AllHealthTech 2025' },
         createdAt: new Date('2025-10-01T14:30:00Z'),
       };
 
@@ -184,8 +186,6 @@ describe('Google Sheets Service', () => {
         role: '',
         dietaryRestrictions: '',
         accessibilityNeeds: '',
-        ticketType: { name: 'Standard' },
-        event: { name: 'AllHealthTech 2025' },
         createdAt: new Date('2025-10-01T14:30:00Z'),
       };
 
@@ -197,7 +197,7 @@ describe('Google Sheets Service', () => {
       expect(row.accessibilityNeeds).toBe('');
     });
 
-    it('should preserve all 11 columns in correct order', () => {
+    it('should preserve all 9 columns in correct order', () => {
       const registration = {
         ticketId: 'AHT-2025-00008',
         attendeeName: 'Test User',
@@ -207,8 +207,6 @@ describe('Google Sheets Service', () => {
         role: 'Test Role',
         dietaryRestrictions: 'Test Diet',
         accessibilityNeeds: 'Test Access',
-        ticketType: { name: 'Standard' },
-        event: { name: 'AllHealthTech 2025' },
         createdAt: new Date('2025-10-01T14:30:00Z'),
       };
 
@@ -223,13 +221,37 @@ describe('Google Sheets Service', () => {
         'role',
         'dietaryRestrictions',
         'accessibilityNeeds',
-        'ticketType',
-        'eventName',
         'registrationTimestamp',
       ];
 
       const actualOrder = Object.keys(row);
       expect(actualOrder).toEqual(expectedOrder);
+    });
+
+    it('should produce exactly 9 sheet values without undefined entries', () => {
+      const registration = {
+        ticketId: 'AHT-2025-00010',
+        attendeeName: 'Sheet Values User',
+        attendeeEmail: 'sheet-values@example.com',
+        attendeePhone: '+91 98765 43210',
+        createdAt: '2025-10-01T14:30:00.000Z',
+      };
+
+      const values = mapRegistrationToSheetValues(registration);
+
+      expect(values).toHaveLength(9);
+      expect(values).not.toContain(undefined);
+      expect(values).toEqual([
+        'AHT-2025-00010',
+        'Sheet Values User',
+        'sheet-values@example.com',
+        '+91 98765 43210',
+        '',
+        '',
+        '',
+        '',
+        '2025-10-01T14:30:00.000Z',
+      ]);
     });
   });
 });

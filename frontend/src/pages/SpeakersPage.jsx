@@ -211,7 +211,7 @@ export default function SpeakersPage() {
       <AnimatedSection animation="fadeUp" duration={800}>
         <div className="relative z-10 py-20 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
-            <span className="inline-block text-xs font-[var(--font-secondary)] font-bold uppercase tracking-widest text-[#3B82F6] mb-3">AllHealthTech 2025</span>
+            <span className="inline-block text-xs font-[var(--font-secondary)] font-bold uppercase tracking-widest text-[#3B82F6] mb-3">AllHealthTech 2026</span>
             <h1 className="text-4xl sm:text-5xl font-[var(--font-primary)] font-black text-[#1F2937] mb-3">Our Speakers</h1>
             <p className="text-[#6B7280] opacity-90 font-[var(--font-secondary)] text-lg max-w-xl">
               30+ visionaries from clinical practice, research, policy, and industry — all under one roof.

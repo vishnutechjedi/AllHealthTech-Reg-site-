@@ -1,62 +1,55 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import crypto from 'crypto';
+import { describe, it, expect, afterAll, beforeEach, vi } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import registrationsRouter from './registrations.js';
 import prisma from '../lib/prisma.js';
 import errorHandler from '../middleware/errorHandler.js';
 
+vi.mock('../middleware/rateLimit.js', () => ({
+  registrationLimiter: (req, res, next) => next(),
+}));
+
+process.env.RAZORPAY_KEY_SECRET = 'test_secret';
+const originalGoogleSheetsEnv = {
+  GOOGLE_SHEETS_ID: process.env.GOOGLE_SHEETS_ID,
+  GOOGLE_SHEETS_CREDENTIALS_PATH: process.env.GOOGLE_SHEETS_CREDENTIALS_PATH,
+};
+delete process.env.GOOGLE_SHEETS_ID;
+delete process.env.GOOGLE_SHEETS_CREDENTIALS_PATH;
+
 const app = express();
 app.use(express.json());
 app.use('/api/registrations', registrationsRouter);
 app.use(errorHandler);
 
+function paymentFields(orderId = `order_${Date.now()}`, paymentId = `pay_${Date.now()}`) {
+  return {
+    razorpay_order_id: orderId,
+    razorpay_payment_id: paymentId,
+    razorpay_signature: crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(`${orderId}|${paymentId}`)
+      .digest('hex'),
+  };
+}
+
 describe('Registration Security Tests', () => {
-  let testEvent;
-  let testTicketType;
-
-  beforeAll(async () => {
-    // Create test event
-    testEvent = await prisma.event.create({
-      data: {
-        name: 'Security Test Event',
-        date: new Date('2026-08-01'),
-        location: 'Test Venue',
-        description: 'Test event for security',
-      },
-    });
-
-    // Create test ticket type
-    testTicketType = await prisma.ticketType.create({
-      data: {
-        eventId: testEvent.id,
-        name: 'Security Test Ticket',
-        price: 1000,
-        description: 'Test ticket type',
-        features: ['Feature 1'],
-        isActive: true,
-      },
-    });
-  });
-
   afterAll(async () => {
     // Clean up test data
-    await prisma.registration.deleteMany({
-      where: { eventId: testEvent.id },
-    });
-    await prisma.ticketType.deleteMany({
-      where: { eventId: testEvent.id },
-    });
-    await prisma.event.delete({
-      where: { id: testEvent.id },
-    });
+    await prisma.registration.deleteMany({});
+    if (originalGoogleSheetsEnv.GOOGLE_SHEETS_ID) {
+      process.env.GOOGLE_SHEETS_ID = originalGoogleSheetsEnv.GOOGLE_SHEETS_ID;
+    }
+    if (originalGoogleSheetsEnv.GOOGLE_SHEETS_CREDENTIALS_PATH) {
+      process.env.GOOGLE_SHEETS_CREDENTIALS_PATH = originalGoogleSheetsEnv.GOOGLE_SHEETS_CREDENTIALS_PATH;
+    }
     await prisma.$disconnect();
   });
 
   beforeEach(async () => {
     // Clean up registrations before each test
-    await prisma.registration.deleteMany({
-      where: { eventId: testEvent.id },
-    });
+    await prisma.registration.deleteMany({});
     // Add small delay to avoid rate limiting in tests
     await new Promise(resolve => setTimeout(resolve, 100));
   });
@@ -69,6 +62,7 @@ describe('Registration Security Tests', () => {
           attendeeName: '<script>alert("xss")</script>',
           attendeeEmail: 'test@example.com',
           attendeePhone: '1234567890',
+          ...paymentFields(),
         });
 
       // Should still accept it but sanitize (Zod doesn't reject HTML by default)
@@ -85,6 +79,7 @@ describe('Registration Security Tests', () => {
           attendeePhone: '  1234567890  ',
           organization: '  Tech Corp  ',
           role: '  Engineer  ',
+          ...paymentFields(),
         });
 
       // May hit rate limit in tests, skip if so
@@ -114,6 +109,7 @@ describe('Registration Security Tests', () => {
           attendeeName: 'Jane Doe',
           attendeeEmail: 'Jane.DOE@EXAMPLE.COM',
           attendeePhone: '9876543210',
+          ...paymentFields(),
         });
 
       expect(response.status).toBe(201);
@@ -181,6 +177,7 @@ describe('Registration Security Tests', () => {
             attendeeName: 'Test User',
             attendeeEmail: `test${Math.random()}@example.com`,
             attendeePhone: phone,
+            ...paymentFields(),
           });
 
         expect(response.status).toBe(201);
@@ -239,6 +236,7 @@ describe('Registration Security Tests', () => {
           role: '',
           dietaryRestrictions: '',
           accessibilityNeeds: '',
+          ...paymentFields(),
         });
 
       expect(response.status).toBe(201);
@@ -267,6 +265,73 @@ describe('Registration Security Tests', () => {
 
       // Should fail email validation
       expect(response.status).toBe(400);
+    });
+  });
+
+  describe('Payment Verification', () => {
+    it('should reject registration without Razorpay payment fields', async () => {
+      const response = await request(app)
+        .post('/api/registrations')
+        .send({
+          attendeeName: 'John Doe',
+          attendeeEmail: 'missing-payment@example.com',
+          attendeePhone: '1234567890',
+        });
+
+      expect(response.status).toBe(400);
+
+      const registration = await prisma.registration.findFirst({
+        where: { attendeeEmail: 'missing-payment@example.com' },
+      });
+      expect(registration).toBeNull();
+    });
+
+    it('should reject registration with an invalid Razorpay signature', async () => {
+      const response = await request(app)
+        .post('/api/registrations')
+        .send({
+          attendeeName: 'John Doe',
+          attendeeEmail: 'invalid-payment@example.com',
+          attendeePhone: '1234567890',
+          razorpay_order_id: 'order_invalid',
+          razorpay_payment_id: 'pay_invalid',
+          razorpay_signature: 'bad_signature',
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.code).toBe('PAYMENT_VERIFICATION_FAILED');
+
+      const registration = await prisma.registration.findFirst({
+        where: { attendeeEmail: 'invalid-payment@example.com' },
+      });
+      expect(registration).toBeNull();
+    });
+
+    it('should reject reuse of a Razorpay payment ID', async () => {
+      const reusedPayment = paymentFields('order_reuse', 'pay_reuse');
+
+      const firstResponse = await request(app)
+        .post('/api/registrations')
+        .send({
+          attendeeName: 'First User',
+          attendeeEmail: 'first-payment@example.com',
+          attendeePhone: '1234567890',
+          ...reusedPayment,
+        });
+
+      expect(firstResponse.status).toBe(201);
+
+      const secondResponse = await request(app)
+        .post('/api/registrations')
+        .send({
+          attendeeName: 'Second User',
+          attendeeEmail: 'second-payment@example.com',
+          attendeePhone: '1234567890',
+          ...reusedPayment,
+        });
+
+      expect(secondResponse.status).toBe(409);
+      expect(secondResponse.body.code).toBe('PAYMENT_ALREADY_USED');
     });
   });
 });

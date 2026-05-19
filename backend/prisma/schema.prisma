@@ -7,44 +7,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Event {
-  id            String         @id @default(cuid())
-  name          String
-  date          DateTime
-  endDate       DateTime?
-  location      String
-  venue         String?
-  description   String
-  bannerUrl     String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  agendaItems   AgendaItem[]
-  registrations Registration[]
-  speakers      Speaker[]
-  ticketTypes   TicketType[]
-}
-
-model TicketType {
-  id            String         @id @default(cuid())
-  eventId       String
-  name          String
-  price         Int
-  currency      String         @default("INR")
-  description   String
-  features      String[]
-  capacity      Int?
-  soldCount     Int            @default(0)
-  isActive      Boolean        @default(true)
-  createdAt     DateTime       @default(now())
-  registrations Registration[]
-  event         Event          @relation(fields: [eventId], references: [id])
-}
-
 model Registration {
   id                   String             @id @default(cuid())
   ticketId             String             @unique
-  eventId              String
-  ticketTypeId         String
+
   attendeeName         String
   attendeeEmail        String
   attendeePhone        String
@@ -64,8 +30,6 @@ model Registration {
   refundStatus         RefundStatus?
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
-  event                Event              @relation(fields: [eventId], references: [id])
-  ticketType           TicketType         @relation(fields: [ticketTypeId], references: [id])
 
   @@index([attendeeEmail])
   @@index([ticketId])
@@ -73,8 +37,7 @@ model Registration {
 }
 
 model Speaker {
-  id           String       @id @default(cuid())
-  eventId      String
+  id           String   @id @default(cuid())
   name         String
   title        String
   organization String
@@ -82,16 +45,15 @@ model Speaker {
   photoUrl     String?
   linkedinUrl  String?
   twitterUrl   String?
-  isFeatured   Boolean      @default(false)
-  displayOrder Int          @default(0)
-  createdAt    DateTime     @default(now())
-  agendaItems  AgendaItem[]
-  event        Event        @relation(fields: [eventId], references: [id])
+  isFeatured   Boolean  @default(false)
+  displayOrder Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  agendaItems AgendaItem[]
 }
 
 model AgendaItem {
-  id           String   @id @default(cuid())
-  eventId      String
+  id           String    @id @default(cuid())
   title        String
   description  String?
   startTime    DateTime
@@ -99,12 +61,12 @@ model AgendaItem {
   track        String?
   location     String?
   speakerId    String?
-  displayOrder Int      @default(0)
-  createdAt    DateTime @default(now())
-  event        Event    @relation(fields: [eventId], references: [id])
-  speaker      Speaker? @relation(fields: [speakerId], references: [id])
+  displayOrder Int       @default(0)
+  createdAt    DateTime  @default(now())
 
-  @@index([eventId, startTime])
+  speaker Speaker? @relation(fields: [speakerId], references: [id])
+
+  @@index([startTime])
 }
 
 model FailedSync {

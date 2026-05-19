@@ -20,8 +20,6 @@ const transporter = nodemailer.createTransport({
  * @param {string} [registration.role]
  * @param {string} [registration.dietaryRestrictions]
  * @param {string} [registration.accessibilityNeeds]
- * @param {{ name: string }} registration.ticketType
- * @param {{ name: string, date: string|Date, location: string }} registration.event
  */
 export async function sendConfirmationEmail(registration) {
   const {
@@ -32,16 +30,13 @@ export async function sendConfirmationEmail(registration) {
     role,
     dietaryRestrictions,
     accessibilityNeeds,
-    ticketType,
-    event,
   } = registration;
 
-  const eventDate = new Date(event.date).toLocaleDateString('en-IN', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  // Hardcoded event information (single event)
+  const eventName = 'AllHealthTech 2026';
+  const eventDate = 'October 15-17, 2026';
+  const eventLocation = 'Bombay Exhibition Centre, Mumbai';
+  const ticketTypeName = 'General Admission';
 
   // Build optional fields rows
   let optionalFieldsRows = '';
@@ -82,11 +77,11 @@ export async function sendConfirmationEmail(registration) {
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
       <div style="background: linear-gradient(135deg, #1e40af, #059669); padding: 32px; text-align: center; border-radius: 8px 8px 0 0;">
         <h1 style="color: #fff; margin: 0; font-size: 24px;">Registration Confirmed!</h1>
-        <p style="color: #d1fae5; margin: 8px 0 0;">AllHealthTech 2025</p>
+        <p style="color: #d1fae5; margin: 8px 0 0;">${eventName}</p>
       </div>
       <div style="background: #f9fafb; padding: 32px; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb;">
         <p style="font-size: 16px;">Dear <strong>${attendeeName}</strong>,</p>
-        <p>Your registration for <strong>${event.name}</strong> has been confirmed. Here are your registration details:</p>
+        <p>Your registration for <strong>${eventName}</strong> has been confirmed. Here are your registration details:</p>
 
         <!-- Ticket ID Highlight -->
         <div style="background: #eff6ff; border-left: 4px solid #1e40af; padding: 16px; margin: 24px 0; border-radius: 4px;">
@@ -98,7 +93,7 @@ export async function sendConfirmationEmail(registration) {
         <table style="width: 100%; border-collapse: collapse; margin: 24px 0; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
           <tr>
             <td style="padding: 12px 16px; font-weight: bold; border-bottom: 1px solid #e5e7eb;">Event</td>
-            <td style="padding: 12px 16px; border-bottom: 1px solid #e5e7eb;">${event.name}</td>
+            <td style="padding: 12px 16px; border-bottom: 1px solid #e5e7eb;">${eventName}</td>
           </tr>
           <tr style="background: #f9fafb;">
             <td style="padding: 12px 16px; font-weight: bold; border-bottom: 1px solid #e5e7eb;">Date</td>
@@ -106,11 +101,11 @@ export async function sendConfirmationEmail(registration) {
           </tr>
           <tr>
             <td style="padding: 12px 16px; font-weight: bold; border-bottom: 1px solid #e5e7eb;">Location</td>
-            <td style="padding: 12px 16px; border-bottom: 1px solid #e5e7eb;">${event.location}</td>
+            <td style="padding: 12px 16px; border-bottom: 1px solid #e5e7eb;">${eventLocation}</td>
           </tr>
           <tr style="background: #f9fafb;">
             <td style="padding: 12px 16px; font-weight: bold; border-bottom: 1px solid #e5e7eb;">Ticket Type</td>
-            <td style="padding: 12px 16px; border-bottom: 1px solid #e5e7eb;">${ticketType.name}</td>
+            <td style="padding: 12px 16px; border-bottom: 1px solid #e5e7eb;">${ticketTypeName}</td>
           </tr>
           <tr>
             <td style="padding: 12px 16px; font-weight: bold; border-bottom: 1px solid #e5e7eb;">Name</td>
@@ -145,7 +140,7 @@ export async function sendConfirmationEmail(registration) {
           </p>
         </div>
 
-        <p style="color: #6b7280; font-size: 14px; margin-top: 24px;">We look forward to seeing you at <strong>${event.name}</strong>!</p>
+        <p style="color: #6b7280; font-size: 14px; margin-top: 24px;">We look forward to seeing you at <strong>${eventName}</strong>!</p>
       </div>
     </div>
   `;
@@ -153,7 +148,7 @@ export async function sendConfirmationEmail(registration) {
   await transporter.sendMail({
     from: process.env.ORGANIZER_EMAIL,
     to: attendeeEmail,
-    subject: `Your AllHealthTech 2025 Ticket Confirmation - ${ticketId}`,
+    subject: `Your ${eventName} Ticket Confirmation - ${ticketId}`,
     html,
   });
 }
@@ -167,12 +162,13 @@ export async function sendConfirmationEmail(registration) {
  * @param {string} registration.refundId
  * @param {string} registration.refundStatus
  * @param {number} registration.amountPaid
- * @param {{ name: string }} registration.ticketType
- * @param {{ name: string }} registration.event
  */
 export async function sendCancellationEmail(registration) {
-  const { ticketId, attendeeName, attendeeEmail, refundId, refundStatus, amountPaid, event } =
+  const { ticketId, attendeeName, attendeeEmail, refundId, refundStatus, amountPaid } =
     registration;
+
+  // Hardcoded event information (single event)
+  const eventName = 'AllHealthTech 2026';
 
   const formattedAmount = new Intl.NumberFormat('en-IN', {
     style: 'currency',
@@ -184,11 +180,11 @@ export async function sendCancellationEmail(registration) {
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
       <div style="background: #dc2626; padding: 32px; text-align: center; border-radius: 8px 8px 0 0;">
         <h1 style="color: #fff; margin: 0; font-size: 24px;">Registration Cancelled</h1>
-        <p style="color: #fecaca; margin: 8px 0 0;">AllHealthTech 2025</p>
+        <p style="color: #fecaca; margin: 8px 0 0;">${eventName}</p>
       </div>
       <div style="background: #f9fafb; padding: 32px; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb;">
         <p style="font-size: 16px;">Dear <strong>${attendeeName}</strong>,</p>
-        <p>Your registration for <strong>${event.name}</strong> has been successfully cancelled.</p>
+        <p>Your registration for <strong>${eventName}</strong> has been successfully cancelled.</p>
 
         <table style="width: 100%; border-collapse: collapse; margin: 24px 0; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
           <tr style="background: #fef2f2;">
@@ -197,7 +193,7 @@ export async function sendCancellationEmail(registration) {
           </tr>
           <tr>
             <td style="padding: 12px 16px; font-weight: bold; border-bottom: 1px solid #e5e7eb;">Event</td>
-            <td style="padding: 12px 16px; border-bottom: 1px solid #e5e7eb;">${event.name}</td>
+            <td style="padding: 12px 16px; border-bottom: 1px solid #e5e7eb;">${eventName}</td>
           </tr>
           <tr style="background: #f9fafb;">
             <td style="padding: 12px 16px; font-weight: bold; border-bottom: 1px solid #e5e7eb;">Refund ID</td>

@@ -5,8 +5,33 @@ import Input from '../ui/Input.jsx'
 import Button from '../ui/Button.jsx'
 import ErrorMessage from '../ui/ErrorMessage.jsx'
 import { apiFetch } from '../../lib/api.js'
+import { cleanupRazorpayOverlay, pinRazorpayOverlayToViewport } from '../../lib/razorpayOverlay.js'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const RAZORPAY_CHECKOUT_URL = 'https://checkout.razorpay.com/v1/checkout.js'
+
+function loadRazorpayCheckout() {
+  return new Promise((resolve, reject) => {
+    if (window.Razorpay) {
+      resolve(true)
+      return
+    }
+
+    const existingScript = document.querySelector(`script[src="${RAZORPAY_CHECKOUT_URL}"]`)
+    if (existingScript) {
+      existingScript.addEventListener('load', () => resolve(true), { once: true })
+      existingScript.addEventListener('error', () => reject(new Error('Unable to load Razorpay Checkout. Please try again.')), { once: true })
+      return
+    }
+
+    const script = document.createElement('script')
+    script.src = RAZORPAY_CHECKOUT_URL
+    script.async = true
+    script.onload = () => resolve(true)
+    script.onerror = () => reject(new Error('Unable to load Razorpay Checkout. Please try again.'))
+    document.body.appendChild(script)
+  })
+}
 
 /**
  * Validates registration form fields
@@ -121,27 +146,78 @@ export default function SimpleRegistrationForm() {
     setGeneralError('')
 
     try {
-      // Submit to POST /api/registrations endpoint
+      const order = await apiFetch('/api/payments/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          attendeeName: submissionData.attendeeName,
+          attendeeEmail: submissionData.attendeeEmail,
+        }),
+      })
+
+      if (!order.success || !order.orderId || !order.keyId) {
+        throw new Error('Unable to start payment. Please try again.')
+      }
+
+      await loadRazorpayCheckout()
+
+      const paymentResult = await new Promise((resolve, reject) => {
+        const checkout = new window.Razorpay({
+          key: order.keyId,
+          amount: order.amount,
+          currency: order.currency,
+          name: 'AllHealthTech',
+          description: 'Event Registration',
+          order_id: order.orderId,
+          prefill: {
+            name: submissionData.attendeeName,
+            email: submissionData.attendeeEmail,
+            contact: submissionData.attendeePhone,
+          },
+          theme: {
+            color: '#3B82F6',
+          },
+          handler: resolve,
+          modal: {
+            ondismiss: () => reject(new Error('Payment was cancelled. Your registration was not created.')),
+          },
+        })
+
+        checkout.on('payment.failed', (response) => {
+          reject(new Error(response.error?.description || 'Payment failed. Your registration was not created.'))
+        })
+
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+        checkout.open()
+        pinRazorpayOverlayToViewport()
+      })
+
+      cleanupRazorpayOverlay()
+
       const response = await apiFetch('/api/registrations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submissionData),
+        body: JSON.stringify({
+          ...submissionData,
+          razorpay_order_id: paymentResult.razorpay_order_id,
+          razorpay_payment_id: paymentResult.razorpay_payment_id,
+          razorpay_signature: paymentResult.razorpay_signature,
+        }),
       })
 
-      // Handle success: set confirmed ticket ID and navigate to success page
-      if (response.success && response.ticketId) {
-        setConfirmedTicketId(response.ticketId)
-        setAttendeeDetails({
-          attendeeName: submissionData.attendeeName,
-          attendeeEmail: submissionData.attendeeEmail,
-          attendeePhone: submissionData.attendeePhone,
-          organization: submissionData.organization,
-          role: submissionData.role,
-        })
-        navigate('/registration/success')
-      } else {
-        setGeneralError('Registration completed but no ticket ID was returned. Please contact support.')
+      if (!response.success || !response.ticketId) {
+        throw new Error('Payment succeeded, but registration could not be confirmed. Please contact support.')
       }
+
+      setConfirmedTicketId(response.ticketId)
+      setAttendeeDetails({
+        attendeeName: submissionData.attendeeName,
+        attendeeEmail: submissionData.attendeeEmail,
+        attendeePhone: submissionData.attendeePhone,
+        organization: submissionData.organization,
+        role: submissionData.role,
+      })
+      navigate('/registration/success')
     } catch (error) {
       // Handle different error types with user-friendly messages
       let errorMessage = 'An unexpected error occurred. Please try again.'
@@ -352,15 +428,15 @@ export default function SimpleRegistrationForm() {
             loading={isSubmitting}
             disabled={isSubmitting}
             className="w-full"
-            aria-label={isSubmitting ? 'Submitting registration, please wait' : 'Complete registration'}
+            aria-label={isSubmitting ? 'Processing registration payment, please wait' : 'Pay and complete registration'}
           >
-            {isSubmitting ? 'Processing...' : 'Complete Registration'}
+            {isSubmitting ? 'Processing...' : 'Pay Rs. 2,999 & Complete Registration'}
           </Button>
         </div>
 
         {/* Help text */}
         <p className="text-xs text-gray-500 text-center pt-2" role="note">
-          By registering, you agree to our terms and conditions. You will receive a confirmation email with your ticket details.
+          Registration is confirmed only after successful payment. You will receive a confirmation email with your ticket details.
         </p>
       </form>
     </div>

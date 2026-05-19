@@ -1,6 +1,8 @@
+/* eslint-disable react/prop-types */
 import { useEffect, useRef, useState } from 'react'
+import { apiFetch } from '../../lib/api'
 
-const stats = [
+const fallbackStats = [
   { value: 500, suffix: '+', label: 'Attendees' },
   { value: 30, suffix: '+', label: 'Speakers' },
   { value: 50, suffix: '+', label: 'Exhibitors' },
@@ -44,6 +46,20 @@ function StatItem({ value, suffix, label, started, isLast }) {
 export default function StatsCounter() {
   const ref = useRef(null)
   const [started, setStarted] = useState(false)
+  const [stats, setStats] = useState(fallbackStats)
+
+  useEffect(() => {
+    apiFetch('/api/stats')
+      .then((data) => {
+        setStats([
+          { value: data.attendees ?? fallbackStats[0].value, suffix: '+', label: 'Attendees' },
+          { value: data.speakers ?? fallbackStats[1].value, suffix: '+', label: 'Speakers' },
+          { value: data.exhibitors ?? fallbackStats[2].value, suffix: '+', label: 'Exhibitors' },
+          { value: data.days ?? fallbackStats[3].value, suffix: '', label: 'Days' },
+        ])
+      })
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     const observer = new IntersectionObserver(

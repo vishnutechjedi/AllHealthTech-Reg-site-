@@ -8,59 +8,30 @@ import { calculateBackoffDelay } from './retryManager.js';
  * These tests verify the complete flow from registration to sync
  */
 describe('Google Sheets Sync End-to-End Tests', () => {
-  let testEvent;
-  let testTicketType;
-
-  beforeAll(async () => {
-    // Create test event
-    testEvent = await prisma.event.create({
-      data: {
-        name: 'E2E Test Event',
-        date: new Date('2026-08-01'),
-        location: 'Test Venue',
-        description: 'End-to-end test event',
-      },
-    });
-
-    // Create test ticket type
-    testTicketType = await prisma.ticketType.create({
-      data: {
-        eventId: testEvent.id,
-        name: 'E2E Test Ticket',
-        price: 1000,
-        description: 'Test ticket type',
-        features: ['Feature 1'],
-        isActive: true,
-      },
-    });
-  });
-
   afterAll(async () => {
     // Clean up test data
     await prisma.registration.deleteMany({
-      where: { eventId: testEvent.id },
+      where: {
+        ticketId: {
+          startsWith: 'AHT-2025-E2E-',
+        },
+      },
     });
     await prisma.failedSync.deleteMany({
       where: {
         registrationData: {
-          path: ['eventId'],
-          equals: testEvent.id,
+          path: ['ticketId'],
+          string_starts_with: 'AHT-2025-E2E-',
         },
       },
     });
     await prisma.deadLetterSync.deleteMany({
       where: {
         registrationData: {
-          path: ['eventId'],
-          equals: testEvent.id,
+          path: ['ticketId'],
+          string_starts_with: 'AHT-2025-E2E-',
         },
       },
-    });
-    await prisma.ticketType.deleteMany({
-      where: { eventId: testEvent.id },
-    });
-    await prisma.event.delete({
-      where: { id: testEvent.id },
     });
     await prisma.$disconnect();
   });
@@ -71,8 +42,6 @@ describe('Google Sheets Sync End-to-End Tests', () => {
       const registration = await prisma.registration.create({
         data: {
           ticketId: 'AHT-2025-E2E-001',
-          eventId: testEvent.id,
-          ticketTypeId: testTicketType.id,
           attendeeName: 'E2E Test User',
           attendeeEmail: 'e2e@example.com',
           attendeePhone: '+91 98765 43210',
@@ -83,16 +52,12 @@ describe('Google Sheets Sync End-to-End Tests', () => {
           status: 'CONFIRMED',
           paymentStatus: 'PAID',
         },
-        include: {
-          event: true,
-          ticketType: true,
-        },
       });
 
       // Step 2: Map to sheet row
       const row = mapRegistrationToSheetRow(registration);
 
-      // Step 3: Verify all fields are present
+      // Step 3: Verify all fields are present (9 columns total)
       expect(row.ticketId).toBe('AHT-2025-E2E-001');
       expect(row.attendeeName).toBe('E2E Test User');
       expect(row.email).toBe('e2e@example.com');
@@ -101,8 +66,6 @@ describe('Google Sheets Sync End-to-End Tests', () => {
       expect(row.role).toBe('E2E Manager');
       expect(row.dietaryRestrictions).toBe('Vegetarian');
       expect(row.accessibilityNeeds).toBe('None');
-      expect(row.ticketType).toBe('E2E Test Ticket');
-      expect(row.eventName).toBe('E2E Test Event');
       expect(row.registrationTimestamp).toMatch(/^\d{4}-\d{2}-\d{2}T/);
 
       // Clean up
@@ -116,17 +79,11 @@ describe('Google Sheets Sync End-to-End Tests', () => {
       const registration = await prisma.registration.create({
         data: {
           ticketId: 'AHT-2025-E2E-002',
-          eventId: testEvent.id,
-          ticketTypeId: testTicketType.id,
           attendeeName: 'E2E Retry Test',
           attendeeEmail: 'e2e-retry@example.com',
           attendeePhone: '+91 87654 32109',
           status: 'CONFIRMED',
           paymentStatus: 'PAID',
-        },
-        include: {
-          event: true,
-          ticketType: true,
         },
       });
 
@@ -176,17 +133,11 @@ describe('Google Sheets Sync End-to-End Tests', () => {
       const registration = await prisma.registration.create({
         data: {
           ticketId: 'AHT-2025-E2E-003',
-          eventId: testEvent.id,
-          ticketTypeId: testTicketType.id,
           attendeeName: 'E2E Dead Letter Test',
           attendeeEmail: 'e2e-deadletter@example.com',
           attendeePhone: '+91 76543 21098',
           status: 'CONFIRMED',
           paymentStatus: 'PAID',
-        },
-        include: {
-          event: true,
-          ticketType: true,
         },
       });
 
@@ -245,53 +196,43 @@ describe('Google Sheets Sync End-to-End Tests', () => {
         prisma.registration.create({
           data: {
             ticketId: 'AHT-2025-E2E-004',
-            eventId: testEvent.id,
-            ticketTypeId: testTicketType.id,
             attendeeName: 'User 1',
             attendeeEmail: 'user1@example.com',
             attendeePhone: '1111111111',
             status: 'CONFIRMED',
             paymentStatus: 'PAID',
           },
-          include: { event: true, ticketType: true },
         }),
         prisma.registration.create({
           data: {
             ticketId: 'AHT-2025-E2E-005',
-            eventId: testEvent.id,
-            ticketTypeId: testTicketType.id,
             attendeeName: 'User 2',
             attendeeEmail: 'user2@example.com',
             attendeePhone: '2222222222',
             status: 'CONFIRMED',
             paymentStatus: 'PAID',
           },
-          include: { event: true, ticketType: true },
         }),
         prisma.registration.create({
           data: {
             ticketId: 'AHT-2025-E2E-006',
-            eventId: testEvent.id,
-            ticketTypeId: testTicketType.id,
             attendeeName: 'User 3',
             attendeeEmail: 'user3@example.com',
             attendeePhone: '3333333333',
             status: 'CONFIRMED',
             paymentStatus: 'PAID',
           },
-          include: { event: true, ticketType: true },
         }),
       ]);
 
       // Map all to sheet rows
       const rows = registrations.map(reg => mapRegistrationToSheetRow(reg));
 
-      // Verify all rows have correct structure
+      // Verify all rows have correct structure (9 columns)
       expect(rows).toHaveLength(3);
       rows.forEach((row, index) => {
         expect(row.ticketId).toBe(`AHT-2025-E2E-00${4 + index}`);
         expect(row.attendeeName).toBe(`User ${index + 1}`);
-        expect(row.eventName).toBe('E2E Test Event');
       });
 
       // Create failed syncs for first two
@@ -391,12 +332,9 @@ describe('Google Sheets Sync End-to-End Tests', () => {
       const registration = await prisma.registration.create({
         data: {
           ...originalData,
-          eventId: testEvent.id,
-          ticketTypeId: testTicketType.id,
           status: 'CONFIRMED',
           paymentStatus: 'PAID',
         },
-        include: { event: true, ticketType: true },
       });
 
       // Map to sheet row

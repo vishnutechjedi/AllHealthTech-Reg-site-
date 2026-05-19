@@ -1,45 +1,16 @@
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
+import { describe, it, expect, afterAll, vi } from 'vitest';
 import prisma from '../lib/prisma.js';
 import { sendConfirmationEmail } from './emailService.js';
 
 describe('Email Service Integration Tests', () => {
-  let testEvent;
-  let testTicketType;
-
-  beforeAll(async () => {
-    // Create test event
-    testEvent = await prisma.event.create({
-      data: {
-        name: 'Test Email Event',
-        date: new Date('2026-07-01'),
-        location: 'Test Venue, Test City',
-        description: 'Test event for email integration',
-      },
-    });
-
-    // Create test ticket type
-    testTicketType = await prisma.ticketType.create({
-      data: {
-        eventId: testEvent.id,
-        name: 'Standard Ticket',
-        price: 2000,
-        description: 'Standard ticket type',
-        features: ['Access to all sessions', 'Lunch included'],
-        isActive: true,
-      },
-    });
-  });
-
   afterAll(async () => {
     // Clean up test data
     await prisma.registration.deleteMany({
-      where: { eventId: testEvent.id },
-    });
-    await prisma.ticketType.deleteMany({
-      where: { eventId: testEvent.id },
-    });
-    await prisma.event.delete({
-      where: { id: testEvent.id },
+      where: { 
+        ticketId: { 
+          startsWith: 'AHT-EMAIL-' 
+        } 
+      },
     });
     await prisma.$disconnect();
   });
@@ -54,14 +25,6 @@ describe('Email Service Integration Tests', () => {
         role: 'Software Engineer',
         dietaryRestrictions: 'Vegetarian',
         accessibilityNeeds: 'Wheelchair access',
-        ticketType: {
-          name: 'Standard Ticket',
-        },
-        event: {
-          name: 'Test Email Event',
-          date: new Date('2026-07-01'),
-          location: 'Test Venue, Test City',
-        },
       };
 
       // Mock console.error to suppress expected error logs in test output
@@ -86,15 +49,6 @@ describe('Email Service Integration Tests', () => {
         ticketId: 'AHT-EMAIL-00002',
         attendeeName: 'Jane Smith',
         attendeeEmail: 'jane.smith@example.com',
-        // No optional fields
-        ticketType: {
-          name: 'Standard Ticket',
-        },
-        event: {
-          name: 'Test Email Event',
-          date: new Date('2026-07-01'),
-          location: 'Test Venue, Test City',
-        },
       };
 
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -115,14 +69,6 @@ describe('Email Service Integration Tests', () => {
         ticketId: 'AHT-EMAIL-00003',
         attendeeName: 'Bob Johnson',
         attendeeEmail: 'bob.johnson@example.com',
-        ticketType: {
-          name: 'Standard Ticket',
-        },
-        event: {
-          name: 'Test Email Event',
-          date: new Date('2026-07-01'),
-          location: 'Test Venue, Test City',
-        },
       };
 
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -152,14 +98,6 @@ describe('Email Service Integration Tests', () => {
         role: undefined,
         dietaryRestrictions: '',
         accessibilityNeeds: null,
-        ticketType: {
-          name: 'Standard Ticket',
-        },
-        event: {
-          name: 'Test Email Event',
-          date: new Date('2026-07-01'),
-          location: 'Test Venue, Test City',
-        },
       };
 
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -183,8 +121,6 @@ describe('Email Service Integration Tests', () => {
       const registration = await prisma.registration.create({
         data: {
           ticketId: 'AHT-EMAIL-00005',
-          eventId: testEvent.id,
-          ticketTypeId: testTicketType.id,
           attendeeName: 'Integration Test User',
           attendeeEmail: 'integration@example.com',
           attendeePhone: '1234567890',
@@ -194,10 +130,6 @@ describe('Email Service Integration Tests', () => {
           accessibilityNeeds: 'None',
           status: 'CONFIRMED',
           paymentStatus: 'PAID',
-        },
-        include: {
-          event: true,
-          ticketType: true,
         },
       });
 
@@ -213,13 +145,17 @@ describe('Email Service Integration Tests', () => {
       expect(registration.role).toBe('Tester');
       expect(registration.dietaryRestrictions).toBe('None');
       expect(registration.accessibilityNeeds).toBe('None');
-      expect(registration.event).toBeDefined();
-      expect(registration.ticketType).toBeDefined();
 
-      // Clean up
-      await prisma.registration.delete({
+      // Clean up - check if record exists first
+      const existingRecord = await prisma.registration.findUnique({
         where: { id: registration.id },
       });
+      
+      if (existingRecord) {
+        await prisma.registration.delete({
+          where: { id: registration.id },
+        });
+      }
     });
   });
 });

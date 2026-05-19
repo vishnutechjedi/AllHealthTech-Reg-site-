@@ -2,20 +2,28 @@ import { useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import useRegistrationStore from '../../stores/registrationStore.js'
 import { CheckIcon, CalendarIcon, UserIcon, MapPinIcon, MailIcon, PhoneIcon, ClockIcon } from '../icons'
+import { cleanupRazorpayOverlay } from '../../lib/razorpayOverlay.js'
 
 export default function SuccessStep() {
   const navigate = useNavigate()
   const { confirmedTicketId, attendeeDetails, clearPaymentData, reset } = useRegistrationStore()
 
   useEffect(() => {
+    cleanupRazorpayOverlay()
     clearPaymentData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleDone = (e) => {
     e.preventDefault()
+    cleanupRazorpayOverlay()
     reset() // Reset the registration store
-    navigate('/register') // Navigate back to registration form
+    navigate('/register', { replace: true }) // Navigate back to registration form
+  }
+
+  const handleBackHome = () => {
+    cleanupRazorpayOverlay()
+    reset()
   }
 
   return (
@@ -47,7 +55,7 @@ export default function SuccessStep() {
         <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">Event Details</h3>
         <div className="flex items-center gap-2.5 text-sm text-gray-900">
           <CalendarIcon className="h-4 w-4 text-brand-600 flex-shrink-0" />
-          <span>AllHealthTech Conference 2025 · Oct 15–17, 2025</span>
+          <span>AllHealthTech Conference 2026 · Oct 15–17, 2026</span>
         </div>
         <div className="flex items-center gap-2.5 text-sm text-gray-900">
           <MapPinIcon className="h-4 w-4 text-brand-600 flex-shrink-0" />
@@ -112,6 +120,7 @@ export default function SuccessStep() {
         </button>
         <Link
           to="/"
+          onClick={handleBackHome}
           className="flex-1 rounded-xl bg-brand-600 py-3 text-sm font-semibold text-white text-center hover:bg-brand-700 hover:shadow-brand transition-all duration-200 active:scale-[0.98]"
         >
           Back to Home

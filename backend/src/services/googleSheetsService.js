@@ -24,6 +24,30 @@ export class PermanentSyncError extends Error {
   }
 }
 
+export const REGISTRATION_SHEET_HEADERS = [
+  'Ticket ID',
+  'Attendee Name',
+  'Email',
+  'Phone',
+  'Organization',
+  'Role',
+  'Dietary Restrictions',
+  'Accessibility Needs',
+  'Registration Timestamp',
+];
+
+export const REGISTRATION_SHEET_COLUMNS = [
+  'ticketId',
+  'attendeeName',
+  'email',
+  'phone',
+  'organization',
+  'role',
+  'dietaryRestrictions',
+  'accessibilityNeeds',
+  'registrationTimestamp',
+];
+
 /**
  * Get authenticated Google Sheets client
  * @param {string} credentialsPath - Path to service account credentials JSON file
@@ -47,6 +71,23 @@ async function getGoogleSheetsAuth(credentialsPath) {
   }
 }
 
+function formatRegistrationTimestamp(createdAt) {
+  if (!createdAt) {
+    return new Date().toISOString();
+  }
+
+  if (createdAt instanceof Date) {
+    return createdAt.toISOString();
+  }
+
+  const parsedDate = new Date(createdAt);
+  if (Number.isNaN(parsedDate.getTime())) {
+    throw new PermanentSyncError(`Invalid registration timestamp: ${createdAt}`);
+  }
+
+  return parsedDate.toISOString();
+}
+
 /**
  * Map registration data to Google Sheets row format
  * @param {Object} registration - Registration object from database
@@ -62,10 +103,13 @@ export function mapRegistrationToSheetRow(registration) {
     role: registration.role || '',
     dietaryRestrictions: registration.dietaryRestrictions || '',
     accessibilityNeeds: registration.accessibilityNeeds || '',
-    ticketType: registration.ticketType?.name || '',
-    eventName: registration.event?.name || '',
-    registrationTimestamp: registration.createdAt.toISOString(),
+    registrationTimestamp: formatRegistrationTimestamp(registration.createdAt),
   };
+}
+
+export function mapRegistrationToSheetValues(registration) {
+  const sheetRow = mapRegistrationToSheetRow(registration);
+  return REGISTRATION_SHEET_COLUMNS.map((column) => sheetRow[column]);
 }
 
 /**
@@ -135,29 +179,13 @@ export async function syncRegistrationToSheets(registration, config) {
     const sheets = google.sheets({ version: 'v4', auth });
 
     // Step 2: Map registration data to sheet row
-    const sheetRow = mapRegistrationToSheetRow(registration);
-
     // Step 3: Prepare values for append
-    const values = [
-      [
-        sheetRow.ticketId,
-        sheetRow.attendeeName,
-        sheetRow.email,
-        sheetRow.phone,
-        sheetRow.organization,
-        sheetRow.role,
-        sheetRow.dietaryRestrictions,
-        sheetRow.accessibilityNeeds,
-        sheetRow.ticketType,
-        sheetRow.eventName,
-        sheetRow.registrationTimestamp,
-      ],
-    ];
+    const values = [mapRegistrationToSheetValues(registration)];
 
     // Step 4: Append row to sheet
     const response = await sheets.spreadsheets.values.append({
       spreadsheetId,
-      range: `${sheetName}!A:K`,
+      range: `${sheetName}!A:I`,
       valueInputOption: 'USER_ENTERED',
       resource: { values },
     });
@@ -206,27 +234,24 @@ export async function initializeGoogleSheet(config) {
     });
 
     const headers = response.data.values?.[0];
-    const expectedHeaders = [
-      'Ticket ID',
-      'Attendee Name',
-      'Email',
-      'Phone',
-      'Organization',
-      'Role',
-      'Dietary Restrictions',
-      'Accessibility Needs',
-      'Ticket Type',
-      'Event Name',
-      'Registration Timestamp',
-    ];
+    const expectedHeaders = REGISTRATION_SHEET_HEADERS;
+    const headersMatch =
+      headers &&
+      headers.length === expectedHeaders.length &&
+      expectedHeaders.every((header, index) => headers[index] === header);
 
     // If headers don't exist or don't match, add them
-    if (!headers || headers.length === 0) {
+    if (!headersMatch) {
       await sheets.spreadsheets.values.update({
         spreadsheetId,
-        range: `${sheetName}!A1:K1`,
+        range: `${sheetName}!A1:I1`,
         valueInputOption: 'USER_ENTERED',
         resource: { values: [expectedHeaders] },
+      });
+
+      await sheets.spreadsheets.values.clear({
+        spreadsheetId,
+        range: `${sheetName}!J1:K1`,
       });
 
       console.log('[GoogleSheets] Sheet headers initialized');

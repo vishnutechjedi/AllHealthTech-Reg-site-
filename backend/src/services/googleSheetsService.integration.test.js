@@ -1,46 +1,16 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, afterAll } from 'vitest';
 import prisma from '../lib/prisma.js';
 import { mapRegistrationToSheetRow } from './googleSheetsService.js';
 
 describe('Google Sheets Service Integration Tests', () => {
-  let testEvent;
-  let testTicketType;
-  let testRegistration;
-
-  beforeAll(async () => {
-    // Create test event
-    testEvent = await prisma.event.create({
-      data: {
-        name: 'Google Sheets Test Event',
-        date: new Date('2026-08-01'),
-        location: 'Test Venue',
-        description: 'Test event for Google Sheets sync',
-      },
-    });
-
-    // Create test ticket type
-    testTicketType = await prisma.ticketType.create({
-      data: {
-        eventId: testEvent.id,
-        name: 'Test Ticket Type',
-        price: 1000,
-        description: 'Test ticket type',
-        features: ['Feature 1'],
-        isActive: true,
-      },
-    });
-  });
-
   afterAll(async () => {
     // Clean up test data
     await prisma.registration.deleteMany({
-      where: { eventId: testEvent.id },
-    });
-    await prisma.ticketType.deleteMany({
-      where: { eventId: testEvent.id },
-    });
-    await prisma.event.delete({
-      where: { id: testEvent.id },
+      where: { 
+        ticketId: { 
+          startsWith: 'AHT-2025-' 
+        } 
+      },
     });
     await prisma.$disconnect();
   });
@@ -51,8 +21,6 @@ describe('Google Sheets Service Integration Tests', () => {
       const registration = await prisma.registration.create({
         data: {
           ticketId: 'AHT-2025-00001',
-          eventId: testEvent.id,
-          ticketTypeId: testTicketType.id,
           attendeeName: 'Test User',
           attendeeEmail: 'test@example.com',
           attendeePhone: '+91 98765 43210',
@@ -62,10 +30,6 @@ describe('Google Sheets Service Integration Tests', () => {
           accessibilityNeeds: 'None',
           status: 'CONFIRMED',
           paymentStatus: 'PAID',
-        },
-        include: {
-          event: true,
-          ticketType: true,
         },
       });
 
@@ -79,8 +43,6 @@ describe('Google Sheets Service Integration Tests', () => {
       expect(row.role).toBe('Test Role');
       expect(row.dietaryRestrictions).toBe('Vegetarian');
       expect(row.accessibilityNeeds).toBe('None');
-      expect(row.ticketType).toBe('Test Ticket Type');
-      expect(row.eventName).toBe('Google Sheets Test Event');
 
       // Clean up
       await prisma.registration.delete({
@@ -92,17 +54,11 @@ describe('Google Sheets Service Integration Tests', () => {
       const registration = await prisma.registration.create({
         data: {
           ticketId: 'AHT-2025-00002',
-          eventId: testEvent.id,
-          ticketTypeId: testTicketType.id,
           attendeeName: 'Minimal User',
           attendeeEmail: 'minimal@example.com',
           attendeePhone: '1234567890',
           status: 'CONFIRMED',
           paymentStatus: 'PAID',
-        },
-        include: {
-          event: true,
-          ticketType: true,
         },
       });
 
@@ -116,8 +72,6 @@ describe('Google Sheets Service Integration Tests', () => {
       expect(row.role).toBe('');
       expect(row.dietaryRestrictions).toBe('');
       expect(row.accessibilityNeeds).toBe('');
-      expect(row.ticketType).toBe('Test Ticket Type');
-      expect(row.eventName).toBe('Google Sheets Test Event');
 
       // Clean up
       await prisma.registration.delete({
@@ -125,12 +79,10 @@ describe('Google Sheets Service Integration Tests', () => {
       });
     });
 
-    it('should preserve all 11 columns in correct order', async () => {
+    it('should preserve all 9 columns in correct order', async () => {
       const registration = await prisma.registration.create({
         data: {
           ticketId: 'AHT-2025-00003',
-          eventId: testEvent.id,
-          ticketTypeId: testTicketType.id,
           attendeeName: 'Order Test',
           attendeeEmail: 'order@example.com',
           attendeePhone: '9876543210',
@@ -140,10 +92,6 @@ describe('Google Sheets Service Integration Tests', () => {
           accessibilityNeeds: 'Order Access',
           status: 'CONFIRMED',
           paymentStatus: 'PAID',
-        },
-        include: {
-          event: true,
-          ticketType: true,
         },
       });
 
@@ -158,14 +106,12 @@ describe('Google Sheets Service Integration Tests', () => {
         'role',
         'dietaryRestrictions',
         'accessibilityNeeds',
-        'ticketType',
-        'eventName',
         'registrationTimestamp',
       ];
 
       const actualOrder = Object.keys(row);
       expect(actualOrder).toEqual(expectedOrder);
-      expect(actualOrder.length).toBe(11);
+      expect(actualOrder.length).toBe(9);
 
       // Clean up
       await prisma.registration.delete({
@@ -179,17 +125,11 @@ describe('Google Sheets Service Integration Tests', () => {
       const registration = await prisma.registration.create({
         data: {
           ticketId: 'AHT-2025-00004',
-          eventId: testEvent.id,
-          ticketTypeId: testTicketType.id,
           attendeeName: 'Failed Sync Test',
           attendeeEmail: 'failed@example.com',
           attendeePhone: '5555555555',
           status: 'CONFIRMED',
           paymentStatus: 'PAID',
-        },
-        include: {
-          event: true,
-          ticketType: true,
         },
       });
 
@@ -222,17 +162,11 @@ describe('Google Sheets Service Integration Tests', () => {
       const registration = await prisma.registration.create({
         data: {
           ticketId: 'AHT-2025-00005',
-          eventId: testEvent.id,
-          ticketTypeId: testTicketType.id,
           attendeeName: 'Dead Letter Test',
           attendeeEmail: 'deadletter@example.com',
           attendeePhone: '4444444444',
           status: 'CONFIRMED',
           paymentStatus: 'PAID',
-        },
-        include: {
-          event: true,
-          ticketType: true,
         },
       });
 
@@ -265,8 +199,6 @@ describe('Google Sheets Service Integration Tests', () => {
       const registration = await prisma.registration.create({
         data: {
           ticketId: 'AHT-2025-00006',
-          eventId: testEvent.id,
-          ticketTypeId: testTicketType.id,
           attendeeName: 'Query Test',
           attendeeEmail: 'query@example.com',
           attendeePhone: '3333333333',
@@ -317,18 +249,12 @@ describe('Google Sheets Service Integration Tests', () => {
       const registration = await prisma.registration.create({
         data: {
           ticketId: 'AHT-2025-00007',
-          eventId: testEvent.id,
-          ticketTypeId: testTicketType.id,
           attendeeName: 'Timestamp Test',
           attendeeEmail: 'timestamp@example.com',
           attendeePhone: '2222222222',
           status: 'CONFIRMED',
           paymentStatus: 'PAID',
           createdAt: testDate,
-        },
-        include: {
-          event: true,
-          ticketType: true,
         },
       });
 

@@ -5,11 +5,14 @@ import validate from '../middleware/validate.js';
 import { registrationLimiter } from '../middleware/rateLimit.js';
 import { generateTicketId } from '../services/ticketService.js';
 import { sendConfirmationEmail } from '../services/emailService.js';
+import {
+  REGISTRATION_AMOUNT_PAISE,
+  verifyRazorpaySignature,
+} from '../services/paymentService.js';
 
 const router = Router();
 
 const createRegistrationSchema = z.object({
-  ticketTypeId: z.string().min(1).max(100).optional(),
   // Sanitize and validate name: trim, max length, no special characters that could be XSS
   attendeeName: z.string()
     .min(1, 'Name is required')
@@ -21,9 +24,9 @@ const createRegistrationSchema = z.object({
     ),
   // Email validation with stricter rules
   attendeeEmail: z.string()
-    .email('Invalid email format')
     .max(255, 'Email must be less than 255 characters')
     .trim()
+    .email('Invalid email format')
     .toLowerCase(),
   // Phone validation: min 7, max 20 characters
   attendeePhone: z.string()
@@ -55,6 +58,9 @@ const createRegistrationSchema = z.object({
     .trim()
     .optional()
     .transform(val => val === '' ? undefined : val),
+  razorpay_order_id: z.string().min(1, 'Razorpay order ID is required').trim(),
+  razorpay_payment_id: z.string().min(1, 'Razorpay payment ID is required').trim(),
+  razorpay_signature: z.string().min(1, 'Razorpay signature is required').trim(),
 });
 
 router.post(
@@ -64,7 +70,6 @@ router.post(
   async (req, res, next) => {
     try {
       const {
-        ticketTypeId,
         attendeeName,
         attendeeEmail,
         attendeePhone,
@@ -72,22 +77,15 @@ router.post(
         role,
         dietaryRestrictions,
         accessibilityNeeds,
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature,
       } = req.body;
 
-      // Get the current (most recent) event
-      const event = await prisma.event.findFirst({
-        orderBy: { date: 'desc' },
-      });
-
-      if (!event) {
-        return res.status(404).json({ error: 'No event found' });
-      }
-
-      // Check for duplicate email registration for this event
+      // Check for duplicate email registration
       const existingRegistration = await prisma.registration.findFirst({
         where: {
           attendeeEmail,
-          eventId: event.id,
           status: { not: 'CANCELLED' },
         },
       });
@@ -99,70 +97,53 @@ router.post(
         });
       }
 
-      // Get ticket type (use provided or default to first active ticket type)
-      let ticketType;
-      if (ticketTypeId) {
-        ticketType = await prisma.ticketType.findUnique({
-          where: { id: ticketTypeId },
-        });
+      const isPaymentValid = verifyRazorpaySignature({
+        orderId: razorpay_order_id,
+        paymentId: razorpay_payment_id,
+        signature: razorpay_signature,
+      });
 
-        if (!ticketType || !ticketType.isActive) {
-          return res.status(404).json({ error: 'Ticket type not found' });
-        }
-      } else {
-        // Get default (first active) ticket type for the event
-        ticketType = await prisma.ticketType.findFirst({
-          where: {
-            eventId: event.id,
-            isActive: true,
-          },
-          orderBy: { createdAt: 'asc' },
+      if (!isPaymentValid) {
+        return res.status(400).json({
+          error: 'Payment verification failed. Registration was not created.',
+          code: 'PAYMENT_VERIFICATION_FAILED',
         });
-
-        if (!ticketType) {
-          return res.status(404).json({ error: 'No active ticket type found' });
-        }
       }
 
-      // Check capacity
-      if (ticketType.capacity !== null && ticketType.soldCount >= ticketType.capacity) {
+      const existingPayment = await prisma.registration.findFirst({
+        where: {
+          razorpayPaymentId: razorpay_payment_id,
+        },
+      });
+
+      if (existingPayment) {
         return res.status(409).json({
-          error: 'Ticket type is sold out',
-          code: 'TICKET_SOLD_OUT',
+          error: 'This payment has already been used for a registration',
+          code: 'PAYMENT_ALREADY_USED',
         });
       }
 
-      // Generate ticket ID and create registration atomically
+      // Generate ticket ID and create registration
       const ticketId = await generateTicketId(prisma);
 
-      const registration = await prisma.$transaction(async (tx) => {
-        const reg = await tx.registration.create({
-          data: {
-            ticketId,
-            eventId: event.id,
-            ticketTypeId: ticketType.id,
-            attendeeName,
-            attendeeEmail,
-            attendeePhone,
-            organization,
-            role,
-            dietaryRestrictions,
-            accessibilityNeeds,
-            status: 'CONFIRMED',
-            paymentStatus: 'PAID',
-          },
-          include: {
-            event: true,
-            ticketType: true,
-          },
-        });
-
-        await tx.ticketType.update({
-          where: { id: ticketType.id },
-          data: { soldCount: { increment: 1 } },
-        });
-
-        return reg;
+      const registration = await prisma.registration.create({
+        data: {
+          ticketId,
+          attendeeName,
+          attendeeEmail,
+          attendeePhone,
+          organization,
+          role,
+          dietaryRestrictions,
+          accessibilityNeeds,
+          status: 'CONFIRMED',
+          paymentStatus: 'PAID',
+          paymentTransactionId: razorpay_payment_id,
+          razorpayOrderId: razorpay_order_id,
+          razorpayPaymentId: razorpay_payment_id,
+          razorpaySignature: razorpay_signature,
+          amountPaid: REGISTRATION_AMOUNT_PAISE,
+        },
       });
 
       // Send confirmation email asynchronously (don't wait for it)
