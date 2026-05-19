@@ -12,7 +12,7 @@ async function main() {
 
   console.log('Cleaned existing data');
 
-  // Create speakers
+  // Create speakers.
   const speakerData = [
     {
       name: 'Dr. Priya Nair',
