@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Seeding database...');
 
-  // Clean existing data in dependency order
+  // Clean existing data in dependency order.
   await prisma.agendaItem.deleteMany();
   await prisma.speaker.deleteMany();
   await prisma.registration.deleteMany();
