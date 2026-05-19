@@ -179,11 +179,15 @@ export default function SimpleRegistrationForm() {
           },
           handler: resolve,
           modal: {
-            ondismiss: () => reject(new Error('Payment was cancelled. Your registration was not created.')),
+            ondismiss: () => {
+              cleanupRazorpayOverlay()
+              reject(new Error('Payment was cancelled. Your registration was not created.'))
+            },
           },
         })
 
         checkout.on('payment.failed', (response) => {
+          cleanupRazorpayOverlay()
           reject(new Error(response.error?.description || 'Payment failed. Your registration was not created.'))
         })
 
@@ -219,6 +223,8 @@ export default function SimpleRegistrationForm() {
       })
       navigate('/registration/success')
     } catch (error) {
+      cleanupRazorpayOverlay()
+
       // Handle different error types with user-friendly messages
       let errorMessage = 'An unexpected error occurred. Please try again.'
       

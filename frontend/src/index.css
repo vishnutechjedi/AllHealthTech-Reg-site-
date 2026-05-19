@@ -119,8 +119,7 @@
     min-height: 100vh;
   }
 
-  .razorpay-container,
-  .razorpay-backdrop {
+  .razorpay-container {
     position: fixed !important;
     inset: 0 !important;
     width: 100vw !important;
