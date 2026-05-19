@@ -7,7 +7,7 @@ const RAZORPAY_OVERLAY_SELECTOR = [
 
 export function pinRazorpayOverlayToViewport() {
   const apply = () => {
-    const containers = document.querySelectorAll('.razorpay-container, .razorpay-backdrop')
+    const containers = document.querySelectorAll('.razorpay-container')
 
     containers.forEach((element) => {
       Object.assign(element.style, {
