@@ -31,13 +31,13 @@ const TIMELINE = [
   { year: '2021', event: 'Hybrid format, first HealthTech Awards ceremony' },
   { year: '2022', event: 'Expanded to 2 days, 300+ in-person attendees, Delhi' },
   { year: '2023', event: 'Moved to Mumbai, 400+ attendees, 20 sponsors' },
-  { year: '2025', event: '3-day flagship event, 500+ expected, Bombay Exhibition Centre' },
+  { year: '2026', event: '3-day flagship event, 500+ expected, Bombay Exhibition Centre' },
 ]
 
 const EVENT_DAYS = [
-  { day: 'Day 1', date: 'Wednesday, 15 October 2025', theme: 'AI & Diagnostics' },
-  { day: 'Day 2', date: 'Thursday, 16 October 2025', theme: 'Digital Health & Policy' },
-  { day: 'Day 3', date: 'Friday, 17 October 2025', theme: 'MedTech & Investment' },
+  { day: 'Day 1', date: 'Thursday, 15 October 2026', theme: 'AI & Diagnostics' },
+  { day: 'Day 2', date: 'Friday, 16 October 2026', theme: 'Digital Health & Policy' },
+  { day: 'Day 3', date: 'Saturday, 17 October 2026', theme: 'MedTech & Investment' },
 ]
 
 export default function AboutPage() {

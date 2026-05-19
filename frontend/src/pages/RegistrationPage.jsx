@@ -70,12 +70,12 @@ export default function RegistrationPage() {
           <div className="relative max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[rgba(59,130,246,0.1)] border border-[#3B82F6] border-opacity-20 mb-4">
               <span className="w-2 h-2 rounded-full bg-[#3B82F6] animate-pulse"></span>
-              <span className="text-xs font-semibold uppercase tracking-wider text-[#3B82F6]">AllHealthTech 2025</span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#3B82F6]">AllHealthTech 2026</span>
             </div>
             <h1 className="text-4xl sm:text-5xl font-bold text-[#1F2937] mb-3 tracking-tight">
               Register for the Conference
             </h1>
-            <p className="text-[#6B7280] text-lg">October 15–17 · Bombay Exhibition Centre, Mumbai</p>
+            <p className="text-[#6B7280] text-lg">October 15–17, 2026 · Bombay Exhibition Centre, Mumbai</p>
           </div>
         </div>
       </AnimatedSection>

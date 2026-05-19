@@ -55,7 +55,7 @@ export default function SuccessStep() {
         <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">Event Details</h3>
         <div className="flex items-center gap-2.5 text-sm text-gray-900">
           <CalendarIcon className="h-4 w-4 text-brand-600 flex-shrink-0" />
-          <span>AllHealthTech Conference 2025 · Oct 15–17, 2025</span>
+          <span>AllHealthTech Conference 2026 · Oct 15–17, 2026</span>
         </div>
         <div className="flex items-center gap-2.5 text-sm text-gray-900">
           <MapPinIcon className="h-4 w-4 text-brand-600 flex-shrink-0" />

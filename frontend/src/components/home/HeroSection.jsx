@@ -11,7 +11,7 @@ const fadeUp = (delay = 0) => ({
 
 const metaItems = [
   { icon: MapPinIcon, label: 'Bombay Exhibition Centre, Mumbai' },
-  { icon: CalendarIcon, label: 'October 15–17, 2025' },
+  { icon: CalendarIcon, label: 'October 15–17, 2026' },
   { icon: TicketIcon, label: '500+ Attendees Expected' },
 ]
 

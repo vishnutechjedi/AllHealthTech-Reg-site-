@@ -34,7 +34,7 @@ function FooterLogo() {
       </div>
       <div className="flex flex-col leading-none">
         <span className="text-[var(--eventor-white)] font-[var(--font-primary)] font-black text-[15px] tracking-tight">AllHealthTech</span>
-        <span className="text-[var(--eventor-primary-light)] text-[10px] font-[var(--font-secondary)] font-bold uppercase tracking-widest">Conference 2025</span>
+        <span className="text-[var(--eventor-primary-light)] text-[10px] font-[var(--font-secondary)] font-bold uppercase tracking-widest">Conference 2026</span>
       </div>
     </div>
   )

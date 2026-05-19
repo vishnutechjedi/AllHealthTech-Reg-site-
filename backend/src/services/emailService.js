@@ -33,9 +33,9 @@ export async function sendConfirmationEmail(registration) {
   } = registration;
 
   // Hardcoded event information (single event)
-  const eventName = 'AllHealthTech 2025';
-  const eventDate = 'Saturday, August 1, 2026';
-  const eventLocation = 'Bangalore International Convention Centre';
+  const eventName = 'AllHealthTech 2026';
+  const eventDate = 'October 15-17, 2026';
+  const eventLocation = 'Bombay Exhibition Centre, Mumbai';
   const ticketTypeName = 'General Admission';
 
   // Build optional fields rows
@@ -168,7 +168,7 @@ export async function sendCancellationEmail(registration) {
     registration;
 
   // Hardcoded event information (single event)
-  const eventName = 'AllHealthTech 2025';
+  const eventName = 'AllHealthTech 2026';
 
   const formattedAmount = new Intl.NumberFormat('en-IN', {
     style: 'currency',

@@ -9,6 +9,7 @@ import errorHandler from './middleware/errorHandler.js';
 import eventsRouter from './routes/events.js';
 import speakersRouter from './routes/speakers.js';
 import agendaRouter from './routes/agenda.js';
+import statsRouter from './routes/stats.js';
 import registrationsRouter from './routes/registrations.js';
 import contactRouter from './routes/contact.js';
 import paymentsRouter from './routes/payments.js';
@@ -59,6 +60,7 @@ app.get('/health', (_req, res) => {
 app.use('/api/events', eventsRouter);
 app.use('/api/speakers', speakersRouter);
 app.use('/api/agenda', agendaRouter);
+app.use('/api/stats', statsRouter);
 app.use('/api/registrations', registrationsRouter);
 app.use('/api/contact', contactRouter);
 app.use('/api/payments', paymentsRouter);

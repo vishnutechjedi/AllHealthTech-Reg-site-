@@ -54,7 +54,7 @@ export default function Navbar() {
             }`}>
               All<span className="text-[#3B82F6]">Health</span>Tech
             </span>
-            <span className="text-[#3B82F6] text-[10px] font-[var(--font-secondary)] font-bold uppercase tracking-widest">2025</span>
+            <span className="text-[#3B82F6] text-[10px] font-[var(--font-secondary)] font-bold uppercase tracking-widest">2026</span>
           </div>
         </NavLink>
 
