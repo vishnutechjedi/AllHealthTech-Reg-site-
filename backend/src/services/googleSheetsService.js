@@ -55,7 +55,12 @@ export const REGISTRATION_SHEET_COLUMNS = [
  */
 async function getGoogleSheetsAuth(credentialsPath) {
   try {
-    const credentials = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
+    let credentials;
+    if (process.env.GOOGLE_SHEETS_CREDENTIALS_JSON) {
+      credentials = JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS_JSON);
+    } else {
+      credentials = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
+    }
     const auth = new google.auth.GoogleAuth({
       credentials,
       scopes: ['https://www.googleapis.com/auth/spreadsheets'],

@@ -5,7 +5,7 @@ process.env.GOOGLE_SHEETS_ID = '1-s9yQZJNo7gwCFvoFQgmQhchmveNNgQz4VKF6oSlWag';
 process.env.GOOGLE_SHEETS_SHEET_NAME = 'Sheet1';
 process.env.GOOGLE_SHEETS_CREDENTIALS_PATH = './credentials/google-sheets-credentials.json';
 
-// Test registration data
+// Test registration data.
 const testRegistration = {
   id: 'test-id',
   ticketId: 'AHT-2026-TEST',

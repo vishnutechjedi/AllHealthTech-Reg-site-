@@ -18,19 +18,16 @@ model Registration {
   role                 String?
   dietaryRestrictions  String?
   accessibilityNeeds   String?
-
   paymentStatus        PaymentStatus      @default(PENDING)
   paymentTransactionId String?
   razorpayOrderId      String?
   razorpayPaymentId    String?
   razorpaySignature    String?
   amountPaid           Int?
-
   status               RegistrationStatus @default(PENDING)
   cancelledAt          DateTime?
   refundId             String?
   refundStatus         RefundStatus?
-
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
 
@@ -72,6 +69,36 @@ model AgendaItem {
   @@index([startTime])
 }
 
+model FailedSync {
+  id               String   @id @default(cuid())
+  registrationId   String
+  registrationData Json
+  error            String
+  errorType        String
+  retryCount       Int      @default(0)
+  nextRetryTime    DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([nextRetryTime])
+  @@index([registrationId])
+}
+
+model DeadLetterSync {
+  id               String   @id @default(cuid())
+  registrationId   String
+  registrationData Json
+  error            String
+  errorType        String
+  retryCount       Int
+  lastAttemptTime  DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([registrationId])
+  @@index([createdAt])
+}
+
 enum PaymentStatus {
   PENDING
   PAID
@@ -90,34 +117,4 @@ enum RefundStatus {
   INITIATED
   PROCESSED
   FAILED
-}
-
-model FailedSync {
-  id                String   @id @default(cuid())
-  registrationId    String
-  registrationData  Json     // Store the registration data for retry
-  error             String
-  errorType         String   // 'TRANSIENT' or 'PERMANENT'
-  retryCount        Int      @default(0)
-  nextRetryTime     DateTime
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  @@index([nextRetryTime])
-  @@index([registrationId])
-}
-
-model DeadLetterSync {
-  id                String   @id @default(cuid())
-  registrationId    String
-  registrationData  Json     // Store the registration data for manual review
-  error             String
-  errorType         String   // Type of error that caused permanent failure
-  retryCount        Int      // Number of retries attempted
-  lastAttemptTime   DateTime
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  @@index([registrationId])
-  @@index([createdAt])
 }
