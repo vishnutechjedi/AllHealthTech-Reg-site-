@@ -36,7 +36,6 @@ export default function AttendeeDetailsStep() {
   const handleChange = (e) => {
     const { name, value } = e.target
     setFields((prev) => ({ ...prev, [name]: value }))
-    // Clear error on change
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: undefined }))
   }
 
@@ -59,8 +58,10 @@ export default function AttendeeDetailsStep() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-2">Your Details</h2>
-      <p className="text-gray-500 mb-8">Tell us a bit about yourself.</p>
+      <h2 className="mb-2 font-[var(--font-display)] text-2xl font-normal text-[var(--text-primary)]">
+        Your Details
+      </h2>
+      <p className="mb-8 text-[var(--text-secondary)]">Tell us a bit about yourself.</p>
 
       <form onSubmit={handleSubmit} noValidate className="w-full max-w-lg space-y-5">
         <Input
@@ -115,11 +116,7 @@ export default function AttendeeDetailsStep() {
         />
 
         <div className="flex gap-3 pt-2">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => setStep('ticket')}
-          >
+          <Button type="button" variant="secondary" onClick={() => setStep('ticket')}>
             Back
           </Button>
           <Button type="submit" variant="primary">

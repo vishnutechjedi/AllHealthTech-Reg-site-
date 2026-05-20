@@ -18,19 +18,22 @@ export default class ErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-8 text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Something went wrong</h1>
-          <p className="max-w-md text-gray-500">
+        <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[var(--color-ice)] p-8 text-center">
+          <h1 className="font-[var(--font-display)] text-2xl font-normal text-[var(--text-primary)]">
+            Something went wrong
+          </h1>
+          <p className="max-w-md text-[var(--text-secondary)]">
             {this.state.error?.message || 'An unexpected error occurred.'}
           </p>
           {this.state.errorInfo && (
-            <pre className="max-w-2xl text-left text-xs text-red-600 bg-red-50 p-4 rounded-lg overflow-auto max-h-48">
+            <pre className="max-h-48 max-w-2xl overflow-auto rounded-[var(--radius-card)] border border-[rgba(200,0,42,0.25)] bg-[rgba(200,0,42,0.06)] p-4 text-left text-xs text-[var(--color-error)]">
               {this.state.errorInfo}
             </pre>
           )}
           <button
+            type="button"
             onClick={() => window.location.reload()}
-            className="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+            className="rounded-[var(--radius-pill)] bg-[var(--color-blue-core)] px-6 py-2.5 text-[13px] font-medium text-white transition-colors hover:bg-[var(--color-blue-deep)] focus:outline-none focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-[var(--color-focus-ring)] focus-visible:outline-offset-2"
           >
             Reload page
           </button>

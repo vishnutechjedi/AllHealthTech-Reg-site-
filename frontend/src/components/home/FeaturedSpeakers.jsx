@@ -1,110 +1,63 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { apiFetch } from '../../lib/api'
 import { ArrowRightIcon } from '../icons'
-import LoadingSpinner from '../ui/LoadingSpinner'
-import { useScrollAnimation } from '../../hooks/useScrollAnimation'
 
-function SpeakerCard({ speaker, index }) {
-  const { ref, isVisible } = useScrollAnimation({ threshold: 0.2 })
-  const delays = ['', 'scroll-delay-100', 'scroll-delay-200', 'scroll-delay-300', 'scroll-delay-400', 'scroll-delay-500']
-  
-  return (
-    <div
-      ref={ref}
-      className={`group relative rounded-2xl overflow-hidden bg-slate-800/50 border-2 border-blue-500/30 shadow-2xl hover:shadow-blue-500/30 hover:border-blue-400/60 hover:-translate-y-2 transition-all duration-300 cursor-pointer backdrop-blur-xl scroll-scale-in ${delays[index]} ${isVisible ? 'visible' : ''}`}
-    >
-      {/* Portrait — 3:4 ratio */}
-      <div className="relative w-full" style={{ paddingBottom: '133.33%' }}>
-        {speaker.photoUrl ? (
-          <img
-            src={speaker.photoUrl}
-            alt={speaker.name}
-            loading="lazy"
-            className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-          />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/50 to-sky-900/50 flex items-center justify-center">
-            <span className="text-5xl font-[var(--font-primary)] font-black text-blue-400 opacity-40">{speaker.name.charAt(0)}</span>
-          </div>
-        )}
+const audiences = [
+  'Healthtech founders and operators',
+  'Venture capitalists and angel investors',
+  'Hospital leaders: CDTOs, CMOs, and operators',
+  'Diagnostics, payers, and digital health stakeholders',
+  'Hospital and clinical management systems',
+  'Policy and ecosystem enablers',
+  'Martech, adtech, fintech, and health adjacencies',
+  'Academia and research institutions',
+]
 
-        {/* Strong gradient overlay */}
-        <div
-          className="absolute inset-0"
-          style={{ background: 'linear-gradient(to top, rgba(15,23,42,0.95) 0%, rgba(15,23,42,0.6) 50%, transparent 100%)' }}
-          aria-hidden="true"
-        />
+const primaryCtaClass =
+  'inline-flex items-center justify-center rounded-[var(--radius-pill)] bg-[var(--color-blue-core)] px-5 py-3 text-[13px] font-medium text-white transition duration-300 hover:-translate-y-0.5 hover:bg-[var(--color-blue-deep)]'
 
-        {/* Featured badge with strong contrast */}
-        {speaker.isFeatured && (
-          <div className="absolute top-3 left-3 px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-500 to-sky-500 text-white text-[10px] font-[var(--font-secondary)] font-bold uppercase tracking-wide shadow-lg shadow-blue-500/50 border border-white/20">
-            Featured
-          </div>
-        )}
-
-        {/* Speaker info with high contrast */}
-        <div className="absolute bottom-0 left-0 right-0 p-5">
-          <p className="text-white font-[var(--font-primary)] font-bold text-base leading-tight drop-shadow-lg">{speaker.name}</p>
-          <p className="text-blue-400 text-xs mt-1 font-[var(--font-secondary)] font-semibold">{speaker.title}</p>
-          <p className="text-slate-300 text-xs mt-0.5 font-[var(--font-secondary)]">{speaker.organization}</p>
-        </div>
-
-        {/* Hover glow effect */}
-        <div className="absolute inset-0 bg-gradient-to-t from-blue-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      </div>
-    </div>
-  )
-}
+const ghostCtaClass =
+  'inline-flex items-center justify-center gap-2 rounded-[var(--radius-pill)] border-[1.5px] border-[rgba(250,243,255,0.35)] px-5 py-3 text-[13px] font-medium text-[var(--text-on-dark)] transition duration-300 hover:bg-[rgba(250,243,255,0.08)]'
 
 export default function FeaturedSpeakers() {
-  const [speakers, setSpeakers] = useState([])
-  const [loading, setLoading] = useState(true)
-  const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation({ threshold: 0.3 })
-
-  useEffect(() => {
-    apiFetch('/api/speakers')
-      .then((data) => setSpeakers(data.filter((s) => s.isFeatured).slice(0, 6)))
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [])
-
   return (
-    <section className="bg-gradient-to-br from-[#F0F4FF] via-white to-[#F5F9FF] py-20 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header with high contrast */}
-        <div ref={headerRef} className={`flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-12 scroll-fade-in ${headerVisible ? 'visible' : ''}`}>
-          <div>
-            <span className="text-xs font-[var(--font-secondary)] font-bold uppercase tracking-[0.1em] mb-3 text-blue-600 inline-block">Speakers</span>
-            <h2 className="text-4xl font-[var(--font-primary)] font-bold text-slate-900 leading-tight">Visionaries &amp; Pioneers</h2>
-            <p className="text-base text-slate-600 leading-relaxed mt-3 max-w-lg font-[var(--font-secondary)]">
-              30+ leaders from clinical practice, research, policy, and industry — all under one roof.
-            </p>
+    <section className="bg-[var(--color-navy)] px-4 py-20 text-[var(--text-on-dark)] sm:px-6 lg:px-8">
+      <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+        <div className="lg:sticky lg:top-28">
+          <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--color-bridge)]">
+            Who it&apos;s for
+          </p>
+          <h2 className="font-[var(--font-display)] text-[clamp(2.4rem,5vw,5.4rem)] font-normal leading-[0.98] text-[var(--text-on-dark)]">
+            The room is selective by design.
+          </h2>
+          <p className="mt-6 max-w-xl text-lg leading-[1.65] text-[var(--color-frost)]">
+            If you are actively building, investing in, operating, or shaping healthcare, this gathering is built around your questions.
+          </p>
+          <div className="mt-9 flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
+            <Link to="/register" className={primaryCtaClass}>
+              Register as a startup
+            </Link>
+            <Link to="/contact" className={ghostCtaClass}>
+              Register as a partner
+              <ArrowRightIcon className="h-4 w-4" />
+            </Link>
           </div>
-          <Link
-            to="/speakers"
-            className="inline-flex items-center gap-1.5 text-blue-600 font-[var(--font-secondary)] font-semibold text-sm hover:text-blue-700 hover:gap-2.5 transition-all duration-[var(--transition-eventor-fast)] flex-shrink-0"
-          >
-            All Speakers
-            <ArrowRightIcon className="w-4 h-4" />
-          </Link>
         </div>
 
-        {loading ? (
-          <div className="flex justify-center py-16">
-            <LoadingSpinner size="lg" />
-          </div>
-        ) : speakers.length === 0 ? (
-          <div className="text-center py-16 text-slate-400 text-sm font-[var(--font-secondary)]">Speaker announcements coming soon.</div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-            {speakers.map((s, index) => (
-              <Link key={s.id} to="/speakers">
-                <SpeakerCard speaker={s} index={index} />
-              </Link>
-            ))}
-          </div>
-        )}
+        <div className="grid grid-cols-1 gap-px overflow-hidden rounded-[var(--radius-card)] border border-[rgba(250,243,255,0.15)] bg-[rgba(250,243,255,0.15)] sm:grid-cols-2">
+          {audiences.map((audience, index) => (
+            <div
+              key={audience}
+              className="bg-[var(--color-blue-deep)] p-6 transition duration-300 hover:bg-[rgba(0,25,196,0.85)]"
+            >
+              <span className="text-xs font-semibold text-[var(--color-bridge)]">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+              <p className="mt-8 min-h-16 text-xl font-semibold leading-snug text-[var(--text-on-dark)]">
+                {audience}
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   )
