@@ -1,6 +1,7 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import useUIStore from '../../stores/uiStore'
+import Logo from '../ui/Logo'
 import { MenuIcon, XIcon } from '../icons'
 
 const navLinks = [
@@ -11,79 +12,75 @@ const navLinks = [
   { to: '/contact', label: 'Contact' },
 ]
 
-function LogoMark() {
-  return (
-    <div className="w-9 h-9 rounded-xl bg-brand-600 flex items-center justify-center shadow-brand flex-shrink-0">
-      <svg width="20" height="16" viewBox="0 0 20 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M1.5 12.5V5.5C1.5 4.1 2.4 3.2 3.8 3.2H6.2C7.6 3.2 8.5 4.1 8.5 5.5V8.5H1.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M8.5 8.5V12.5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-        <path d="M11.5 3.2H18.5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-        <path d="M15 3.2V12.5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-        <path d="M11.5 8.5H18.5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-      </svg>
-    </div>
-  )
-}
+const DARK_HERO_ROUTES = ['/', '/about', '/agenda', '/speakers', '/contact', '/policies']
 
 export default function Navbar() {
   const { mobileMenuOpen, toggleMobileMenu } = useUIStore()
   const [isScrolled, setIsScrolled] = useState(false)
+  const location = useLocation()
+  const isDarkHeroPage = DARK_HERO_ROUTES.includes(location.pathname)
+  const overHero = isDarkHeroPage && !isScrolled
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50)
-    }
-
+    const handleScroll = () => setIsScrolled(window.scrollY > 50)
+    handleScroll()
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+  }, [location.pathname])
+
+  const headerClass = overHero
+    ? 'border-b border-transparent bg-transparent'
+    : 'border-b border-[var(--color-mist)] bg-[rgba(250,243,255,0.92)] backdrop-blur-[20px]'
+
+  const linkClass = (isActive) => {
+    if (overHero) {
+      return isActive
+        ? 'text-[var(--text-on-dark)]'
+        : 'text-[var(--color-frost)] hover:bg-[rgba(250,243,255,0.08)] hover:text-[var(--text-on-dark)]'
+    }
+    return isActive
+      ? 'text-[var(--color-blue-deep)]'
+      : 'text-[var(--text-secondary)] hover:bg-[var(--color-frost)] hover:text-[var(--color-blue-deep)]'
+  }
+
+  const activeBarClass = overHero ? 'bg-[var(--color-bridge)]' : 'bg-[var(--color-blue-core)]'
+
+  const registerClass = overHero
+    ? 'hidden items-center rounded-[var(--radius-pill)] border-[1.5px] border-[rgba(250,243,255,0.35)] px-5 py-2.5 text-[13px] font-medium text-[var(--text-on-dark)] transition-all duration-300 hover:bg-[rgba(250,243,255,0.08)] sm:inline-flex'
+    : 'hidden items-center rounded-[var(--radius-pill)] bg-[var(--color-blue-core)] px-5 py-2.5 text-[13px] font-medium text-white transition-all duration-300 hover:-translate-y-px hover:bg-[var(--color-blue-deep)] sm:inline-flex'
+
+  const menuBtnClass = overHero
+    ? 'rounded-[var(--radius-md)] p-2 text-[var(--text-on-dark)] transition-colors hover:bg-[rgba(250,243,255,0.08)]'
+    : 'rounded-[var(--radius-md)] p-2 text-[var(--text-secondary)] transition-colors hover:bg-[var(--color-frost)] hover:text-[var(--color-blue-deep)]'
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-      isScrolled 
-        ? 'bg-gradient-to-r from-white to-[#F5F9FF] backdrop-blur-[20px] bg-opacity-90 border-b border-[#E8F0FF]' 
-        : 'bg-transparent backdrop-blur-0 border-b border-transparent'
-    }`}>
-      <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 h-20 md:h-16">
-        {/* Logo with Eventor styling */}
-        <NavLink to="/" className="flex items-center gap-2.5 group flex-shrink-0" onClick={() => mobileMenuOpen && toggleMobileMenu()}>
-          <LogoMark />
-          <div className="flex flex-col leading-none">
-            <span className={`font-[var(--font-primary)] font-black text-[15px] tracking-tight transition-colors ${
-              isScrolled ? 'text-[#1F2937]' : 'text-[#1F2937]'
-            }`}>
-              All<span className="text-[#3B82F6]">Health</span>Tech
-            </span>
-            <span className="text-[#3B82F6] text-[10px] font-[var(--font-secondary)] font-bold uppercase tracking-widest">2026</span>
-          </div>
+    <header className={`fixed left-0 right-0 top-0 z-50 transition-all duration-300 ${headerClass}`}>
+      <nav className="mx-auto flex h-24 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <NavLink
+          to="/"
+          className="group flex min-w-0 flex-shrink-0 items-center"
+          onClick={() => mobileMenuOpen && toggleMobileMenu()}
+        >
+          <Logo variant="nav" theme={overHero ? 'dark' : 'light'} />
         </NavLink>
 
-        {/* Desktop nav links with Eventor styling */}
-        <ul className="hidden lg:flex items-center gap-0.5">
+        <ul className="hidden items-center gap-0.5 lg:flex">
           {navLinks.map(({ to, label }) => (
             <li key={to}>
               <NavLink
                 to={to}
                 end={to === '/'}
                 className={({ isActive }) => [
-                  'relative px-3.5 py-2 rounded-[var(--radius-md)] text-sm',
-                  'font-[var(--font-secondary)] font-medium',
-                  'transition-all duration-[var(--transition-eventor-fast)]',
-                  isActive
-                    ? isScrolled ? 'text-[#3B82F6]' : 'text-[#1F2937]'
-                    : isScrolled 
-                      ? 'text-[#2D3748] hover:text-[#3B82F6] hover:bg-[rgba(59,130,246,0.1)]'
-                      : 'text-[#1F2937] hover:text-[#3B82F6] hover:bg-[rgba(59,130,246,0.1)]',
+                  'relative rounded-[var(--radius-md)] px-3.5 py-2 text-sm font-medium transition-all duration-[var(--transition-fast)]',
+                  linkClass(isActive),
                 ].join(' ')}
               >
                 {({ isActive }) => (
                   <>
                     {label}
                     {isActive && (
-                      <span 
-                        className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-0.5 rounded-full transition-colors ${
-                          isScrolled ? 'bg-[#3B82F6]' : 'bg-[#3B82F6]'
-                        }`}
+                      <span
+                        className={`absolute bottom-0 left-1/2 h-0.5 w-full -translate-x-1/2 rounded-full ${activeBarClass}`}
                         aria-hidden="true"
                       />
                     )}
@@ -94,38 +91,29 @@ export default function Navbar() {
           ))}
         </ul>
 
-        {/* CTA + hamburger with Eventor styling */}
         <div className="flex items-center gap-3">
-          <NavLink
-            to="/register"
-            className="hidden sm:inline-flex items-center gap-1.5 px-5 py-2.5 rounded-[var(--radius-lg)] text-white text-sm font-[var(--font-secondary)] font-semibold transition-all duration-[var(--transition-eventor-normal)] hover:shadow-lg hover:-translate-y-[1px] bg-gradient-to-r from-[#3B82F6] to-[#0EA5E9] hover:from-[#2563EB] hover:to-[#0284C7]"
-          >
-            Register Now
+          <NavLink to="/register" className={registerClass}>
+            Register
           </NavLink>
           <button
             type="button"
             aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={mobileMenuOpen}
             onClick={toggleMobileMenu}
-            className={`lg:hidden p-2 rounded-[var(--radius-md)] transition-colors ${
-              isScrolled
-                ? 'text-[#2D3748] hover:text-[#3B82F6] hover:bg-[rgba(59,130,246,0.1)]'
-                : 'text-[#1F2937] hover:text-[#3B82F6] hover:bg-[rgba(59,130,246,0.1)]'
-            }`}
+            className={`${menuBtnClass} lg:hidden`}
           >
-            {mobileMenuOpen ? <XIcon className="w-5 h-5" /> : <MenuIcon className="w-5 h-5" />}
+            {mobileMenuOpen ? <XIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
           </button>
         </div>
       </nav>
 
-      {/* Mobile slide-down menu with Eventor dark background */}
       <div
         className={[
-          'lg:hidden overflow-hidden transition-all duration-300 ease-in-out',
+          'overflow-hidden transition-all duration-300 ease-in-out lg:hidden',
           mobileMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0',
         ].join(' ')}
       >
-        <div className="bg-[#F0F4FF] border-t border-[#E8F0FF] px-4 pb-5 pt-3">
+        <div className="border-t border-[var(--color-mist)] bg-[var(--color-ice)] px-4 pb-5 pt-3">
           <ul className="flex flex-col gap-1">
             {navLinks.map(({ to, label }) => (
               <li key={to}>
@@ -134,11 +122,10 @@ export default function Navbar() {
                   end={to === '/'}
                   onClick={toggleMobileMenu}
                   className={({ isActive }) => [
-                    'block px-4 py-2.5 rounded-[var(--radius-lg)] text-sm',
-                    'font-[var(--font-secondary)] font-medium transition-colors',
+                    'block rounded-[var(--radius-md)] px-4 py-2.5 text-sm font-medium transition-colors',
                     isActive
-                      ? 'text-[#3B82F6] bg-[rgba(59,130,246,0.1)] font-semibold'
-                      : 'text-[#2D3748] hover:text-[#3B82F6] hover:bg-[rgba(59,130,246,0.1)]',
+                      ? 'bg-[var(--color-frost)] font-semibold text-[var(--color-blue-deep)]'
+                      : 'text-[var(--text-secondary)] hover:bg-[var(--color-frost)] hover:text-[var(--color-blue-deep)]',
                   ].join(' ')}
                 >
                   {label}
@@ -149,9 +136,9 @@ export default function Navbar() {
               <NavLink
                 to="/register"
                 onClick={toggleMobileMenu}
-                className="block px-4 py-3 rounded-[var(--radius-lg)] bg-gradient-to-r from-[#3B82F6] to-[#0EA5E9] text-white text-sm font-[var(--font-secondary)] font-semibold text-center hover:from-[#2563EB] hover:to-[#0284C7] transition-all"
+                className="block rounded-[var(--radius-pill)] bg-[var(--color-blue-core)] px-4 py-3 text-center text-[13px] font-medium text-white transition-all hover:bg-[var(--color-blue-deep)]"
               >
-                Register Now
+                Register
               </NavLink>
             </li>
           </ul>

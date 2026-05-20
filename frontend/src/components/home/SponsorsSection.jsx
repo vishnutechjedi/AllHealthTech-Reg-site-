@@ -1,66 +1,77 @@
-import { useScrollAnimation } from '../../hooks/useScrollAnimation'
+import { Link } from 'react-router-dom'
+import { ArrowRightIcon } from '../icons'
 
-const sponsors = Array.from({ length: 8 }, (_, i) => ({ id: i + 1, name: `Sponsor ${i + 1}` }))
+const partnerSlots = ['HealthTech Alpha', 'Partner', 'Sponsor', 'Ecosystem Ally']
 
-function SponsorCard({ name, index }) {
-  const { ref, isVisible } = useScrollAnimation({ threshold: 0.2 })
-  const delays = [0, 50, 100, 150, 200, 250, 300, 350]
-  
-  return (
-    <div 
-      ref={ref}
-      className={`group flex items-center justify-center rounded-[var(--radius-xl)] border border-[var(--eventor-dark-700)] bg-[var(--eventor-dark-800)] p-6 shadow-[var(--shadow-eventor-md)] hover:shadow-[var(--shadow-eventor-blue)] hover:border-[var(--eventor-primary-light)] transition-all duration-[var(--transition-eventor-normal)] aspect-[3/2] ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}
-      style={{
-        transitionDelay: `${delays[index]}ms`,
-        transitionDuration: '600ms',
-        transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
-      }}
-    >
-      {/* Placeholder logo mark with Eventor styling */}
-      <div className="flex flex-col items-center gap-2 opacity-40 group-hover:opacity-100 transition-opacity duration-[var(--transition-eventor-normal)]">
-        <div className="w-10 h-10 rounded-[var(--radius-lg)] bg-[var(--eventor-primary)] flex items-center justify-center shadow-[var(--shadow-eventor-sm)]">
-          <svg width="18" height="14" viewBox="0 0 18 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M1 11V5C1 3.9 1.8 3 2.9 3H5C6.1 3 7 3.9 7 5V7.5H1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M7 7.5V11" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
-            <path d="M10 3H17" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
-            <path d="M13.5 3V11" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
-            <path d="M10 7.5H17" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
-          </svg>
-        </div>
-        <span className="text-xs font-[var(--font-secondary)] font-semibold text-[var(--eventor-gray-100)] tracking-wide">{name}</span>
-      </div>
-    </div>
-  )
-}
+const ghostCtaClass =
+  'inline-flex items-center justify-center rounded-[var(--radius-pill)] border-[1.5px] border-[rgba(250,243,255,0.35)] px-6 py-3.5 text-[13px] font-medium text-[var(--text-on-dark)] transition duration-300 hover:bg-[rgba(250,243,255,0.08)]'
 
 export default function SponsorsSection() {
-  const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation({ threshold: 0.3 })
-  
   return (
-    <section className="bg-[var(--eventor-dark-900)] py-20 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto">
-        {/* Header with Eventor styling */}
-        <div 
-          ref={headerRef}
-          className={`text-center mb-12 transition-all duration-700 ${headerVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
-        >
-          <p className="text-xs font-[var(--font-secondary)] font-bold uppercase tracking-widest text-[var(--eventor-primary-light)] mb-2">Proudly Supported By</p>
-          <h2 className="text-2xl font-[var(--font-primary)] font-bold text-[var(--eventor-white)]">Our Sponsors &amp; Partners</h2>
+    <section className="bg-[var(--color-ice)] px-4 py-20 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+          <div>
+            <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
+              About AHT
+            </p>
+            <h2 className="font-[var(--font-display)] text-[clamp(2rem,5vw,5rem)] font-normal leading-[0.98] text-[var(--text-primary)]">
+              We do not just report on the ecosystem. We bring it together.
+            </h2>
+          </div>
+          <div className="space-y-5 text-lg leading-[1.65] text-[var(--text-secondary)]">
+            <p>
+              All Health Tech is a platform focused on healthtech insights, trends, and stories
+              shaping the future of healthcare.
+            </p>
+            <p>
+              AllHealth X Tech extends that mission by bringing startups, hospitals, capital,
+              policy, and research into one focused room.
+            </p>
+            <p className="font-semibold text-[var(--text-primary)]">
+              In partnership with HealthTech Alpha, a global healthtech intelligence platform.
+            </p>
+          </div>
         </div>
 
-        {/* Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {sponsors.map((s, index) => (
-            <SponsorCard key={s.id} name={s.name} index={index} />
+        <div className="mt-14 grid grid-cols-2 gap-3 md:grid-cols-4">
+          {partnerSlots.map((slot) => (
+            <div
+              key={slot}
+              className="flex aspect-[3/2] items-center justify-center rounded-[var(--radius-card)] border border-[var(--color-mist)] bg-[var(--color-warm-white)] p-5 text-center shadow-[var(--shadow-card)]"
+            >
+              <span className="text-sm font-semibold tracking-wide text-[var(--color-navy)]">
+                {slot}
+              </span>
+            </div>
           ))}
         </div>
 
-        <p className="text-center text-[var(--eventor-gray-100)] font-[var(--font-secondary)] text-sm mt-8">
-          Interested in sponsoring?{' '}
-          <a href="/contact" className="text-[var(--eventor-primary-light)] font-semibold hover:underline transition-colors">
-            Get in touch
-          </a>
-        </p>
+        <div className="mt-16 grid overflow-hidden rounded-[var(--radius-card)] bg-[var(--color-blue-core)] text-[var(--text-on-dark)] shadow-[0_30px_80px_rgba(0,35,253,0.22)] lg:grid-cols-[1fr_auto]">
+          <div className="p-8 sm:p-10">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--color-frost)]">
+              Final CTA
+            </p>
+            <h3 className="mt-4 max-w-3xl font-[var(--font-display)] text-4xl font-normal leading-tight text-[var(--text-on-dark)] sm:text-5xl">
+              Join the room where healthtech conversations actually happen.
+            </h3>
+            <p className="mt-5 text-lg text-[var(--color-frost)]">
+              Limited seats. Curated participation.
+            </p>
+          </div>
+          <div className="flex flex-col justify-center gap-3 border-t border-[rgba(250,243,255,0.2)] p-8 sm:flex-row lg:min-w-[330px] lg:flex-col lg:border-l lg:border-t-0">
+            <Link
+              to="/register"
+              className="inline-flex items-center justify-center gap-2 rounded-[var(--radius-pill)] bg-[var(--color-warm-white)] px-6 py-3.5 text-[13px] font-medium text-[var(--text-primary)] transition duration-300 hover:-translate-y-0.5"
+            >
+              Register to Attend
+              <ArrowRightIcon className="h-4 w-4" />
+            </Link>
+            <Link to="/contact" className={ghostCtaClass}>
+              Contact Us
+            </Link>
+          </div>
+        </div>
       </div>
     </section>
   )
