@@ -1,112 +1,95 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { apiFetch } from '../../lib/api'
-import { ClockIcon, ArrowRightIcon } from '../icons'
-import LoadingSpinner from '../ui/LoadingSpinner'
-import { useScrollAnimation } from '../../hooks/useScrollAnimation'
+import { ArrowRightIcon } from '../icons'
 
-function fmt(d) {
-  return new Date(d).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
-}
+const differences = [
+  {
+    title: 'Curated, not crowded',
+    text: 'A group of high-intent leaders chosen for the conversations they can move forward.',
+  },
+  {
+    title: 'Expert-first conversations',
+    text: 'Less theory, more lived experience from people building inside complex healthcare systems.',
+  },
+  {
+    title: 'Cross-ecosystem perspective',
+    text: 'Startups, hospitals, capital, policy, and academia in the same room.',
+  },
+  {
+    title: 'Built for interaction',
+    text: 'Panels, workshops, and real networking designed for participation, not passive listening.',
+  },
+]
 
-function AgendaCard({ item, index }) {
-  const { ref, isVisible } = useScrollAnimation({ threshold: 0.2 })
-  const delays = ['', 'scroll-delay-100', 'scroll-delay-200', 'scroll-delay-300']
-  
-  return (
-    <div
-      ref={ref}
-      className={`group flex flex-col sm:flex-row gap-5 bg-[var(--eventor-dark-800)] rounded-[var(--radius-xl)] border border-[var(--eventor-dark-700)] border-l-4 border-l-[var(--eventor-primary)] p-6 shadow-[var(--shadow-eventor-lg)] hover:shadow-[var(--shadow-eventor-blue-lg)] hover:border-l-[var(--eventor-primary-light)] hover:-translate-y-0.5 transition-all duration-[var(--transition-eventor-normal)] scroll-slide-left ${delays[index]} ${isVisible ? 'visible' : ''}`}
-    >
-      {/* Time with Eventor styling */}
-      <div className="sm:w-24 flex-shrink-0 flex sm:flex-col items-center sm:items-start gap-2 sm:gap-0">
-        <ClockIcon className="w-4 h-4 text-[var(--eventor-primary-light)] sm:mb-1" />
-        <span className="text-[var(--eventor-primary-light)] font-[var(--font-secondary)] font-bold text-sm">{fmt(item.startTime)}</span>
-        {item.endTime && (
-          <span className="text-[var(--eventor-gray-500)] text-xs hidden sm:block font-[var(--font-secondary)]">– {fmt(item.endTime)}</span>
-        )}
-      </div>
-
-      {/* Content with Eventor typography */}
-      <div className="flex-1 min-w-0">
-        <div className="flex flex-wrap items-start gap-2 mb-1.5">
-          <h3 className="text-[var(--eventor-white)] font-[var(--font-primary)] font-semibold text-sm leading-snug flex-1">{item.title}</h3>
-          {item.track && (
-            <span className="inline-block px-2.5 py-0.5 rounded-[var(--radius-md)] bg-[rgba(0,102,255,0.1)] text-[var(--eventor-primary-light)] text-[11px] font-[var(--font-secondary)] font-bold uppercase tracking-wide flex-shrink-0 border border-[var(--eventor-primary)] border-opacity-20">
-              {item.track}
-            </span>
-          )}
-        </div>
-        {item.description && (
-          <p className="text-[var(--eventor-gray-100)] font-[var(--font-secondary)] text-xs leading-relaxed mb-2 line-clamp-2">{item.description}</p>
-        )}
-        {item.speaker && (
-          <div className="flex items-center gap-2 mt-2">
-            {item.speaker.photoUrl ? (
-              <img
-                src={item.speaker.photoUrl}
-                alt={item.speaker.name}
-                className="w-5 h-5 rounded-full object-cover flex-shrink-0"
-              />
-            ) : (
-              <div className="w-5 h-5 rounded-full bg-[rgba(0,102,255,0.1)] border border-[var(--eventor-primary)] border-opacity-20 flex items-center justify-center text-[var(--eventor-primary-light)] text-[10px] font-[var(--font-secondary)] font-bold flex-shrink-0">
-                {item.speaker.name.charAt(0)}
-              </div>
-            )}
-            <span className="text-[var(--eventor-gray-100)] text-xs font-[var(--font-secondary)]">
-              {item.speaker.name}
-              {item.speaker.organization && ` · ${item.speaker.organization}`}
-            </span>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
+const themes = [
+  'Scaling healthtech startups in complex systems',
+  'Hospital-startup collaboration: what works and what does not',
+  'The role of capital in shaping healthcare innovation',
+  'Interoperability, data, and digital infrastructure',
+  'What the next decade of healthcare looks like',
+]
 
 export default function AgendaPreview() {
-  const [items, setItems] = useState([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    apiFetch('/api/agenda')
-      .then((data) => setItems(data.slice(0, 4)))
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [])
-
   return (
-    <section className="bg-[var(--eventor-dark-800)] py-20 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header with Eventor styling */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
+    <section className="bg-[var(--color-frost)] px-4 py-20 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="grid gap-12 lg:grid-cols-[1fr_0.9fr]">
           <div>
-            <span className="text-xs font-[var(--font-secondary)] font-bold uppercase tracking-[0.1em] mb-3 text-[var(--eventor-primary-light)] inline-block">Programme</span>
-            <h2 className="text-4xl font-[var(--font-primary)] font-bold text-[var(--eventor-white)] leading-tight">What's On</h2>
-            <p className="text-base text-[var(--eventor-gray-100)] leading-relaxed mt-3 font-[var(--font-secondary)]">A glimpse of the sessions shaping the agenda.</p>
+            <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
+              What makes it different
+            </p>
+            <h2 className="max-w-4xl font-[var(--font-display)] text-[clamp(2.3rem,5vw,5rem)] font-normal leading-[0.98] text-[var(--text-primary)]">
+              Designed for conversations that would not happen on a public stage.
+            </h2>
           </div>
-          <Link
-            to="/agenda"
-            className="inline-flex items-center gap-1.5 text-[var(--eventor-primary-light)] font-[var(--font-secondary)] font-semibold text-sm hover:gap-2.5 transition-all duration-[var(--transition-eventor-fast)] flex-shrink-0"
-          >
-            Full Agenda
-            <ArrowRightIcon className="w-4 h-4" />
-          </Link>
+          <div className="flex items-end">
+            <p className="max-w-xl text-lg leading-[1.65] text-[var(--text-secondary)]">
+              The format is practical, founder-aware, hospital-aware, and capital-aware. It is built around the friction points that decide whether healthtech scales.
+            </p>
+          </div>
         </div>
 
-        {loading ? (
-          <div className="flex justify-center py-16">
-            <LoadingSpinner size="lg" />
+        <div className="mt-14 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {differences.map((item) => (
+            <article
+              key={item.title}
+              className="rounded-[var(--radius-card)] border border-[var(--color-mist)] bg-white p-6 shadow-[var(--shadow-card)]"
+            >
+              <h3 className="text-xl font-semibold leading-tight text-[var(--text-primary)]">{item.title}</h3>
+              <p className="mt-6 text-sm leading-6 text-[var(--text-secondary)]">{item.text}</p>
+            </article>
+          ))}
+        </div>
+
+        <div className="mt-16 grid overflow-hidden rounded-[var(--radius-card)] border border-[rgba(250,243,255,0.12)] bg-[var(--color-navy)] lg:grid-cols-[0.72fr_1fr]">
+          <div className="p-7 sm:p-10">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--color-bridge)]">
+              Themes we will explore
+            </p>
+            <h3 className="mt-4 max-w-sm font-[var(--font-display)] text-4xl font-normal leading-tight text-[var(--text-on-dark)]">
+              Practical questions, not generic tracks.
+            </h3>
+            <Link
+              to="/agenda"
+              className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-[var(--color-frost)] transition duration-300 hover:gap-3 hover:text-[var(--text-on-dark)]"
+            >
+              View agenda
+              <ArrowRightIcon className="h-4 w-4" />
+            </Link>
           </div>
-        ) : items.length === 0 ? (
-          <div className="text-center py-16 text-[var(--eventor-gray-500)] text-sm font-[var(--font-secondary)]">Agenda coming soon.</div>
-        ) : (
-          <div className="flex flex-col gap-4">
-            {items.map((item, index) => (
-              <AgendaCard key={item.id} item={item} index={index} />
+          <div className="grid border-t border-[rgba(250,243,255,0.12)] lg:border-l lg:border-t-0">
+            {themes.map((theme, index) => (
+              <div
+                key={theme}
+                className="flex gap-5 border-b border-[rgba(250,243,255,0.1)] p-6 last:border-b-0 sm:p-7"
+              >
+                <span className="font-[var(--font-display)] text-3xl font-normal text-[var(--color-bridge)]">
+                  {index + 1}
+                </span>
+                <p className="self-center text-lg font-medium leading-snug text-[var(--color-frost)]">{theme}</p>
+              </div>
             ))}
           </div>
-        )}
+        </div>
       </div>
     </section>
   )

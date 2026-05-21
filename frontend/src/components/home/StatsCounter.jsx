@@ -1,84 +1,62 @@
-/* eslint-disable react/prop-types */
-import { useEffect, useRef, useState } from 'react'
-import { apiFetch } from '../../lib/api'
-
-const fallbackStats = [
-  { value: 500, suffix: '+', label: 'Attendees' },
-  { value: 30, suffix: '+', label: 'Speakers' },
-  { value: 50, suffix: '+', label: 'Exhibitors' },
-  { value: 3, suffix: '', label: 'Days' },
+const ecosystemStats = [
+  {
+    value: '~$10 Bn',
+    label: 'Funding over the past decade',
+    detail:
+      'India healthtech funding peaked at $2.6 Bn in 2021 and continues to attract meaningful annual investment after the correction.',
+  },
+  {
+    value: '850+',
+    label: 'Deals shaping the ecosystem',
+    detail:
+      'Deal activity crossed 100 annual deals at its peak, signaling durable category creation across digital health, diagnostics, and infrastructure.',
+  },
+  {
+    value: '5x',
+    label: 'Growth in average deal size',
+    detail:
+      'Average deal size moved from about $3 Mn to $15 Mn plus, reflecting stronger conviction in scalable, category-defining companies.',
+  },
+  {
+    value: '555+',
+    label: 'Partnerships powering growth',
+    detail:
+      'Indian ventures are collaborating with startups, hospitals, corporates, and global players including Y Combinator and Mayo Clinic.',
+  },
 ]
 
-function useCountUp(target, duration = 1600, started = false) {
-  const [count, setCount] = useState(0)
-  useEffect(() => {
-    if (!started) return
-    let start = null
-    const step = (ts) => {
-      if (!start) start = ts
-      const progress = Math.min((ts - start) / duration, 1)
-      // ease-out cubic
-      const eased = 1 - Math.pow(1 - progress, 3)
-      setCount(Math.floor(eased * target))
-      if (progress < 1) requestAnimationFrame(step)
-    }
-    requestAnimationFrame(step)
-  }, [target, duration, started])
-  return count
-}
-
-function StatItem({ value, suffix, label, started, isLast }) {
-  const count = useCountUp(value, 1400, started)
-  return (
-    <div className={['flex-1 flex flex-col items-center justify-center py-12 px-6 relative group', !isLast ? 'after:absolute after:right-0 after:top-1/4 after:h-1/2 after:w-px after:bg-gradient-to-b after:from-transparent after:via-blue-200 after:to-transparent after:hidden sm:after:block' : ''].join(' ')}>
-      <div className="relative">
-        {/* Glow effect behind number */}
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-sky-500 blur-2xl opacity-10 group-hover:opacity-20 transition-opacity" />
-        <span className="relative text-6xl sm:text-7xl font-[var(--font-primary)] font-black bg-gradient-to-r from-blue-600 via-sky-600 to-blue-600 bg-clip-text text-transparent tabular-nums drop-shadow-lg">
-          {count}{suffix}
-        </span>
-      </div>
-      <span className="text-slate-600 text-sm font-[var(--font-secondary)] font-semibold mt-3 uppercase tracking-widest">{label}</span>
-    </div>
-  )
-}
-
 export default function StatsCounter() {
-  const ref = useRef(null)
-  const [started, setStarted] = useState(false)
-  const [stats, setStats] = useState(fallbackStats)
-
-  useEffect(() => {
-    apiFetch('/api/stats')
-      .then((data) => {
-        setStats([
-          { value: data.attendees ?? fallbackStats[0].value, suffix: '+', label: 'Attendees' },
-          { value: data.speakers ?? fallbackStats[1].value, suffix: '+', label: 'Speakers' },
-          { value: data.exhibitors ?? fallbackStats[2].value, suffix: '+', label: 'Exhibitors' },
-          { value: data.days ?? fallbackStats[3].value, suffix: '', label: 'Days' },
-        ])
-      })
-      .catch(() => {})
-  }, [])
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setStarted(true); observer.disconnect() } },
-      { threshold: 0.3 }
-    )
-    if (ref.current) observer.observe(ref.current)
-    return () => observer.disconnect()
-  }, [])
-
   return (
-    <section 
-      ref={ref} 
-      className="bg-white border-y-2 border-blue-100"
-    >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row divide-y sm:divide-y-0 divide-blue-100">
-          {stats.map((s, i) => (
-            <StatItem key={s.label} {...s} started={started} isLast={i === stats.length - 1} />
+    <section className="bg-[var(--color-ice)] px-4 py-20 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
+          <div>
+            <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
+              What it&apos;s all about
+            </p>
+            <h2 className="max-w-xl font-[var(--font-display)] text-[clamp(2.3rem,5vw,5rem)] font-normal leading-[0.98] text-[var(--text-primary)]">
+              One room for the ecosystem that usually works in silos.
+            </h2>
+          </div>
+          <p className="max-w-2xl text-lg leading-[1.65] text-[var(--text-secondary)]">
+            AllHealth X Tech is an invite-only gathering for real conversations across healthcare. Leaders, investors, operators, and decision-makers exchange what is actually working today.
+          </p>
+        </div>
+
+        <div className="mt-14 grid grid-cols-1 border border-[var(--color-mist)] bg-[var(--color-warm-white)] md:grid-cols-2 lg:grid-cols-4">
+          {ecosystemStats.map((stat) => (
+            <article
+              key={stat.label}
+              className="group min-h-[260px] border-b border-[var(--color-mist)] p-6 transition duration-300 hover:bg-[var(--color-frost)] md:[&:nth-child(2n+1)]:border-r lg:border-b-0 lg:border-r lg:last:border-r-0"
+            >
+              <p className="font-[var(--font-display)] text-5xl font-normal text-[var(--color-navy)] transition duration-300 group-hover:text-[var(--color-abyss)]">
+                {stat.value}
+              </p>
+              <h3 className="mt-5 text-xl font-semibold leading-tight text-[var(--text-primary)]">{stat.label}</h3>
+              <p className="mt-8 text-sm leading-6 text-[var(--text-secondary)] opacity-80 transition duration-300 group-hover:opacity-100">
+                {stat.detail}
+              </p>
+            </article>
           ))}
         </div>
       </div>
