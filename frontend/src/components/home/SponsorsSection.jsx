@@ -1,10 +1,8 @@
 import { Link } from 'react-router-dom'
+import { linkBtn } from '../ui/buttonClasses'
 import { ArrowRightIcon } from '../icons'
 
 const partnerSlots = ['HealthTech Alpha', 'Partner', 'Sponsor', 'Ecosystem Ally']
-
-const ghostCtaClass =
-  'inline-flex items-center justify-center rounded-[var(--radius-pill)] border-[1.5px] border-[rgba(250,243,255,0.35)] px-6 py-3.5 text-[13px] font-medium text-[var(--text-on-dark)] transition duration-300 hover:bg-[rgba(250,243,255,0.08)]'
 
 export default function SponsorsSection() {
   return (
@@ -47,8 +45,13 @@ export default function SponsorsSection() {
           ))}
         </div>
 
-        <div className="mt-16 grid overflow-hidden rounded-[var(--radius-card)] bg-[var(--color-blue-core)] text-[var(--text-on-dark)] shadow-[0_30px_80px_rgba(0,35,253,0.22)] lg:grid-cols-[1fr_auto]">
-          <div className="p-8 sm:p-10">
+        <div className="bg-cta-band relative mt-16 overflow-hidden rounded-[var(--radius-card)] lg:grid lg:grid-cols-[1fr_auto]">
+          <div className="cta-band-orbs" aria-hidden="true">
+            <span className="cta-orb cta-orb--bridge" />
+            <span className="cta-orb cta-orb--deep" />
+            <span className="cta-orb cta-orb--core" />
+          </div>
+          <div className="relative z-[1] p-8 sm:p-10">
             <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--color-frost)]">
               Final CTA
             </p>
@@ -59,15 +62,12 @@ export default function SponsorsSection() {
               Limited seats. Curated participation.
             </p>
           </div>
-          <div className="flex flex-col justify-center gap-3 border-t border-[rgba(250,243,255,0.2)] p-8 sm:flex-row lg:min-w-[330px] lg:flex-col lg:border-l lg:border-t-0">
-            <Link
-              to="/register"
-              className="inline-flex items-center justify-center gap-2 rounded-[var(--radius-pill)] bg-[var(--color-warm-white)] px-6 py-3.5 text-[13px] font-medium text-[var(--text-primary)] transition duration-300 hover:-translate-y-0.5"
-            >
+          <div className="relative z-[1] flex flex-col justify-center gap-3 border-t border-[rgba(250,243,255,0.2)] p-8 sm:flex-row lg:min-w-[330px] lg:flex-col lg:border-l lg:border-t-0">
+            <Link to="/register" className={`${linkBtn.primary} gap-2`}>
               Register to Attend
               <ArrowRightIcon className="h-4 w-4" />
             </Link>
-            <Link to="/contact" className={ghostCtaClass}>
+            <Link to="/contact" className={linkBtn.ghostOnDark}>
               Contact Us
             </Link>
           </div>

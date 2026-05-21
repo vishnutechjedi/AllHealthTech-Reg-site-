@@ -7,6 +7,12 @@ import CTABand from '../components/ui/CTABand'
 import Badge from '../components/ui/Badge'
 import { ClockIcon, MapPinIcon } from '../components/icons'
 import { useScrollAnimation } from '../hooks/useScrollAnimation'
+import { linkBtn } from '../components/ui/buttonClasses'
+
+const filterActive = linkBtn.filterActive
+
+const filterInactive =
+  'rounded-[var(--radius-pill)] border border-[var(--color-mist)] bg-[var(--color-warm-white)] px-4 py-2 text-sm font-medium text-[var(--text-secondary)] transition-all duration-300 hover:border-[var(--color-blue-core)] hover:text-[var(--color-blue-deep)]'
 
 function fmt(d) {
   return new Date(d).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
@@ -85,12 +91,6 @@ function AgendaItem({ item, index }) {
     </div>
   )
 }
-
-const filterActive =
-  'rounded-[var(--radius-pill)] bg-[var(--color-blue-core)] px-4 py-2 text-sm font-medium text-white shadow-[0_4px_14px_rgba(0,35,253,0.2)] transition-all duration-300'
-
-const filterInactive =
-  'rounded-[var(--radius-pill)] border border-[var(--color-mist)] bg-[var(--color-warm-white)] px-4 py-2 text-sm font-medium text-[var(--text-secondary)] transition-all duration-300 hover:border-[var(--color-blue-core)] hover:text-[var(--color-blue-deep)]'
 
 export default function AgendaPage() {
   const [items, setItems] = useState([])
@@ -182,6 +182,7 @@ export default function AgendaPage() {
       </div>
 
       <CTABand
+        variant="agenda"
         title="Join the conversations in the room."
         subtitle="Limited seats. Curated participation."
         primaryCta={{ to: '/register', label: 'Register to Attend' }}
