@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { linkBtn } from '../ui/buttonClasses'
 import { ArrowRightIcon } from '../icons'
 
 const audiences = [
@@ -11,12 +12,6 @@ const audiences = [
   'Martech, adtech, fintech, and health adjacencies',
   'Academia and research institutions',
 ]
-
-const primaryCtaClass =
-  'inline-flex items-center justify-center rounded-[var(--radius-pill)] bg-[var(--color-blue-core)] px-5 py-3 text-[13px] font-medium text-white transition duration-300 hover:-translate-y-0.5 hover:bg-[var(--color-blue-deep)]'
-
-const ghostCtaClass =
-  'inline-flex items-center justify-center gap-2 rounded-[var(--radius-pill)] border-[1.5px] border-[rgba(250,243,255,0.35)] px-5 py-3 text-[13px] font-medium text-[var(--text-on-dark)] transition duration-300 hover:bg-[rgba(250,243,255,0.08)]'
 
 export default function FeaturedSpeakers() {
   return (
@@ -33,10 +28,10 @@ export default function FeaturedSpeakers() {
             If you are actively building, investing in, operating, or shaping healthcare, this gathering is built around your questions.
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
-            <Link to="/register" className={primaryCtaClass}>
+            <Link to="/register" className={linkBtn.primaryMd}>
               Register as a startup
             </Link>
-            <Link to="/contact" className={ghostCtaClass}>
+            <Link to="/contact" className={`${linkBtn.ghostOnDarkMd} gap-2`}>
               Register as a partner
               <ArrowRightIcon className="h-4 w-4" />
             </Link>

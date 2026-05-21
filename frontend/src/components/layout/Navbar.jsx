@@ -2,6 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import useUIStore from '../../stores/uiStore'
 import Logo from '../ui/Logo'
+import { linkBtn } from '../ui/buttonClasses'
 import { MenuIcon, XIcon } from '../icons'
 
 const navLinks = [
@@ -47,7 +48,7 @@ export default function Navbar() {
 
   const registerClass = overHero
     ? 'hidden items-center rounded-[var(--radius-pill)] border-[1.5px] border-[rgba(250,243,255,0.35)] px-5 py-2.5 text-[13px] font-medium text-[var(--text-on-dark)] transition-all duration-300 hover:bg-[rgba(250,243,255,0.08)] sm:inline-flex'
-    : 'hidden items-center rounded-[var(--radius-pill)] bg-[var(--color-blue-core)] px-5 py-2.5 text-[13px] font-medium text-white transition-all duration-300 hover:-translate-y-px hover:bg-[var(--color-blue-deep)] sm:inline-flex'
+    : `hidden sm:inline-flex ${linkBtn.primaryMd}`
 
   const menuBtnClass = overHero
     ? 'rounded-[var(--radius-md)] p-2 text-[var(--text-on-dark)] transition-colors hover:bg-[rgba(250,243,255,0.08)]'
@@ -136,7 +137,7 @@ export default function Navbar() {
               <NavLink
                 to="/register"
                 onClick={toggleMobileMenu}
-                className="block rounded-[var(--radius-pill)] bg-[var(--color-blue-core)] px-4 py-3 text-center text-[13px] font-medium text-white transition-all hover:bg-[var(--color-blue-deep)]"
+                className={`block w-full text-center ${linkBtn.primaryMd} px-4 py-3`}
               >
                 Register
               </NavLink>

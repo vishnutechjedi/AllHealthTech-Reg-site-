@@ -16,7 +16,7 @@ function SpeakerModal({ speaker, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,8,74,0.9)] p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,7,74,0.34)] p-4 backdrop-blur-sm"
       onClick={onClose}
       onKeyDown={handleKey}
       role="dialog"

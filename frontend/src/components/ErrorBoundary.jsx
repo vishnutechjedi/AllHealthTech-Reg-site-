@@ -33,7 +33,7 @@ export default class ErrorBoundary extends Component {
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="rounded-[var(--radius-pill)] bg-[var(--color-blue-core)] px-6 py-2.5 text-[13px] font-medium text-white transition-colors hover:bg-[var(--color-blue-deep)] focus:outline-none focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-[var(--color-focus-ring)] focus-visible:outline-offset-2"
+            className="btn-gradient btn-gradient-primary px-6 py-2.5 text-[13px] font-medium"
           >
             Reload page
           </button>

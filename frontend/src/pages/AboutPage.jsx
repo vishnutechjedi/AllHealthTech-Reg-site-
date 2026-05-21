@@ -45,6 +45,7 @@ export default function AboutPage() {
       </AnimatedSection>
 
       <CTABand
+        variant="about"
         eyebrow="AllHealth X Tech"
         title="A curated room for the people actively building healthcare's future."
         subtitle="Bangalore, July 2026. Limited seats. Curated participation. In partnership with HealthTech Alpha."
